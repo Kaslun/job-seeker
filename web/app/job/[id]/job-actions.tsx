@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import type { Job } from "@/lib/supabase";
 import { Icon } from "@/components/visual";
 
-type Mode = "actions" | "calibrate" | "draft";
+type Mode = "actions" | "drafting" | "draft";
 
 const STATUS_LABELS: Record<Job["status"], string> = {
   new: "New",
@@ -18,8 +18,6 @@ export function JobActions({ job }: { job: Job }) {
   const [mode, setMode] = useState<Mode>("actions");
   const [status, setStatus] = useState(job.status);
   const [letter, setLetter] = useState(job.letter_text || "");
-  const [variants, setVariants] = useState<string[] | null>(null);
-  const [generating, setGenerating] = useState(false);
   const [busy, setBusy] = useState(false);
   const router = useRouter();
 
@@ -41,29 +39,26 @@ export function JobActions({ job }: { job: Job }) {
     }
   };
 
-  const startApply = async () => {
-    // If user has no prior calibration sample, generate three voice variants first.
-    setMode("calibrate");
-    setGenerating(true);
+  const generateDraft = async () => {
+    setMode("drafting");
     try {
       const res = await fetch(`/api/draft-letter`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ jobId: job.id, mode: "variants" }),
+        body: JSON.stringify({ jobId: job.id, mode: "single" }),
       });
       if (!res.ok) throw new Error(await res.text());
       const json = await res.json();
-      setVariants(json.variants);
+      setLetter(json.letter || "");
+      setMode("draft");
     } catch (e: any) {
       alert("Failed: " + e.message);
       setMode("actions");
-    } finally {
-      setGenerating(false);
     }
   };
 
-  const pickVariant = (text: string) => {
-    setLetter(text);
+  const openSavedDraft = () => {
+    setLetter(job.letter_text || "");
     setMode("draft");
   };
 
@@ -102,47 +97,27 @@ export function JobActions({ job }: { job: Job }) {
     }
   };
 
-  if (mode === "calibrate") {
+  const regenerate = async () => {
+    if (letter && !confirm("Replace your current draft with a fresh one?")) return;
+    await generateDraft();
+  };
+
+  if (mode === "drafting") {
     return (
       <div className="card p-5">
-        <div className="eyebrow" style={{ marginBottom: 12 }}>Pick the voice</div>
-        <p className="body" style={{ fontSize: 13, color: "var(--ink-2)", marginTop: 0 }}>
-          Three variants in different tones. Click the one closest to how you'd write — that's the starting draft.
+        <div className="eyebrow" style={{ marginBottom: 12 }}>Drafting letter</div>
+        <p className="muted" style={{ fontSize: 13, marginTop: 0 }}>
+          Writing in your voice. Takes about 10 seconds.
         </p>
-        {generating && (
-          <div className="col gap-3" style={{ marginTop: 16 }}>
-            <div className="skeleton" style={{ height: 80 }} />
-            <div className="skeleton" style={{ height: 80 }} />
-            <div className="skeleton" style={{ height: 80 }} />
-          </div>
-        )}
-        {!generating && variants && (
-          <div className="col gap-3" style={{ marginTop: 16 }}>
-            {variants.map((v, i) => (
-              <button
-                key={i}
-                onClick={() => pickVariant(v)}
-                className="card p-4"
-                style={{
-                  textAlign: "left",
-                  cursor: "pointer",
-                  background: "var(--paper)",
-                  border: "1px solid var(--paper-3)",
-                  fontSize: 13,
-                  lineHeight: 1.5,
-                  color: "var(--ink-2)",
-                  fontFamily: "var(--f-body)",
-                }}
-              >
-                <div className="mono dim" style={{ fontSize: 10, marginBottom: 6 }}>VARIANT {i + 1}</div>
-                {v.slice(0, 280)}{v.length > 280 ? "…" : ""}
-              </button>
-            ))}
-          </div>
-        )}
-        <button className="btn btn-flat" style={{ marginTop: 16 }} onClick={() => setMode("actions")}>
-          Cancel
-        </button>
+        <div className="col gap-2" style={{ marginTop: 16 }}>
+          <div className="skeleton" style={{ height: 12 }} />
+          <div className="skeleton" style={{ height: 12, width: "92%" }} />
+          <div className="skeleton" style={{ height: 12, width: "88%" }} />
+          <div className="skeleton" style={{ height: 12, width: "70%" }} />
+          <div className="skeleton" style={{ height: 12, marginTop: 12 }} />
+          <div className="skeleton" style={{ height: 12, width: "94%" }} />
+          <div className="skeleton" style={{ height: 12, width: "60%" }} />
+        </div>
       </div>
     );
   }
@@ -178,10 +153,27 @@ export function JobActions({ job }: { job: Job }) {
           >
             <Icon.send /> Mark as applied
           </button>
-          <button className="btn btn-flat" onClick={saveLetter} disabled={busy} style={{ width: "100%", justifyContent: "center", fontSize: 13 }}>
-            Save draft (don't mark applied yet)
+          <button
+            className="btn btn-flat"
+            onClick={saveLetter}
+            disabled={busy}
+            style={{ width: "100%", justifyContent: "center", fontSize: 13 }}
+          >
+            Save draft (don&apos;t mark applied yet)
           </button>
-          <button className="btn btn-ghost" onClick={() => setMode("actions")} style={{ width: "100%", justifyContent: "center", fontSize: 13 }}>
+          <button
+            className="btn btn-flat"
+            onClick={regenerate}
+            disabled={busy}
+            style={{ width: "100%", justifyContent: "center", fontSize: 13 }}
+          >
+            Regenerate from scratch
+          </button>
+          <button
+            className="btn btn-ghost"
+            onClick={() => setMode("actions")}
+            style={{ width: "100%", justifyContent: "center", fontSize: 13 }}
+          >
             Back
           </button>
         </div>
@@ -189,67 +181,79 @@ export function JobActions({ job }: { job: Job }) {
     );
   }
 
-  // actions mode
   return (
-    <>
-      <div className="card p-5">
-        <div className="eyebrow" style={{ marginBottom: 8 }}>Status</div>
-        <div className="row between" style={{ marginBottom: 12 }}>
-          <span className="h3" style={{ fontSize: 16 }}>{STATUS_LABELS[status]}</span>
-          {status === "applied" && job.applied_at && (
-            <span className="mono dim" style={{ fontSize: 11 }}>{new Date(job.applied_at).toLocaleDateString()}</span>
-          )}
-        </div>
-        <div className="col gap-2">
-          <a
-            href={job.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="btn"
-            style={{ width: "100%", justifyContent: "center" }}
-          >
-            <Icon.external /> Open posting
-          </a>
-          {status !== "applied" && (
-            <button
-              className="btn btn-primary"
-              onClick={startApply}
-              disabled={busy}
-              style={{ width: "100%", justifyContent: "center" }}
-            >
-              {job.letter_text ? "Continue draft" : "Draft letter"} <Icon.arrow />
-            </button>
-          )}
-          {job.letter_text && status !== "applied" && (
-            <button
-              className="btn btn-flat"
-              onClick={() => { setLetter(job.letter_text || ""); setMode("draft"); }}
-              style={{ width: "100%", justifyContent: "center", fontSize: 13 }}
-            >
-              Edit saved draft
-            </button>
-          )}
-          <div className="row gap-2" style={{ marginTop: 4 }}>
-            <button
-              className="btn btn-flat"
-              onClick={() => updateStatus(status === "interested" ? "new" : "interested")}
-              disabled={busy}
-              style={{ flex: 1, justifyContent: "center", fontSize: 13 }}
-            >
-              {status === "interested" ? "Unmark interested" : "Mark interested"}
-            </button>
-            <button
-              className="btn btn-flat btn-danger"
-              onClick={() => updateStatus("skip")}
-              disabled={busy || status === "skip"}
-              style={{ flex: 1, justifyContent: "center", fontSize: 13 }}
-            >
-              Skip
-            </button>
-          </div>
-        </div>
+    <div className="card p-5">
+      <div className="eyebrow" style={{ marginBottom: 8 }}>Status</div>
+      <div className="row between" style={{ marginBottom: 12 }}>
+        <span className="h3" style={{ fontSize: 16 }}>{STATUS_LABELS[status]}</span>
+        {status === "applied" && job.applied_at && (
+          <span className="mono dim" style={{ fontSize: 11 }}>
+            {new Date(job.applied_at).toLocaleDateString()}
+          </span>
+        )}
       </div>
-    </>
+      <div className="col gap-2">
+        <a
+          href={job.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="btn"
+          style={{ width: "100%", justifyContent: "center" }}
+        >
+          <Icon.external /> Open posting
+        </a>
+        {status !== "applied" && (
+          <>
+            {job.letter_text ? (
+              <button
+                className="btn btn-primary"
+                onClick={openSavedDraft}
+                disabled={busy}
+                style={{ width: "100%", justifyContent: "center" }}
+              >
+                Edit saved draft <Icon.arrow />
+              </button>
+            ) : (
+              <button
+                className="btn btn-primary"
+                onClick={generateDraft}
+                disabled={busy}
+                style={{ width: "100%", justifyContent: "center" }}
+              >
+                Draft letter <Icon.arrow />
+              </button>
+            )}
+            <div className="row gap-2" style={{ marginTop: 4 }}>
+              <button
+                className="btn btn-flat"
+                onClick={() => updateStatus(status === "interested" ? "new" : "interested")}
+                disabled={busy}
+                style={{ flex: 1, justifyContent: "center", fontSize: 13 }}
+              >
+                {status === "interested" ? "Unmark" : "Interested"}
+              </button>
+              <button
+                className="btn btn-flat btn-danger"
+                onClick={() => updateStatus("skip")}
+                disabled={busy || status === "skip"}
+                style={{ flex: 1, justifyContent: "center", fontSize: 13 }}
+              >
+                Skip
+              </button>
+            </div>
+          </>
+        )}
+        {status === "applied" && job.letter_text && (
+          <button
+            className="btn btn-flat"
+            onClick={openSavedDraft}
+            style={{ width: "100%", justifyContent: "center", fontSize: 13 }}
+          >
+            View letter sent
+          </button>
+        )}
+      </div>
+    </div>
   );
 }
 

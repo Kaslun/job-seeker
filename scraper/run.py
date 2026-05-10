@@ -33,15 +33,15 @@ def get_supabase():
     return create_client(url, key)
 
 
-def fetch_studio(adapter_name: str, handle: str) -> list[dict]:
+def fetch_studio(adapter_name: str, handle: str) -> tuple[list[dict], str | None]:
+    """Returns (jobs, error_message). error_message is None on success."""
     adapter = ADAPTERS.get(adapter_name)
     if not adapter:
-        return []
+        return [], f"unknown adapter: {adapter_name}"
     try:
-        return adapter.fetch(handle)
+        return adapter.fetch(handle), None
     except Exception as e:
-        print(f"  adapter {adapter_name}({handle}) failed: {e}")
-        return []
+        return [], f"{type(e).__name__}: {e}"
 
 
 def existing_source_ids(sb, source: str, ids: list[str]) -> set[str]:
@@ -77,14 +77,29 @@ def main():
 
     # 1. Fetch all
     all_jobs = []
+    studio_results: dict[str, dict] = {}  # slug -> dict for batch insert at end
     for s in studios:
+        slug = s["slug"]
         print(f"\n[{s['ats']}] {s['name']} ({s['ats_handle']})")
-        jobs = fetch_studio(s["ats"], s["ats_handle"])
+        t0 = time.time()
+        jobs, err = fetch_studio(s["ats"], s["ats_handle"])
+        duration_ms = int((time.time() - t0) * 1000)
+        if err:
+            print(f"  failed: {err}")
         print(f"  fetched {len(jobs)}")
         for j in jobs:
             j["company"] = s["name"]
+            j["_studio_slug"] = slug  # tag for inserted_count tracking
             all_jobs.append(j)
-        time.sleep(0.5)  # be gentle
+        studio_results[slug] = {
+            "studio_slug": slug,
+            "ats": s["ats"],
+            "fetched_count": len(jobs),
+            "inserted_count": 0,  # filled in after insert step
+            "error": err,
+            "duration_ms": duration_ms,
+        }
+        time.sleep(0.5)
 
     print(f"\n{len(all_jobs)} jobs total before filtering")
 
@@ -130,6 +145,7 @@ def main():
     # 5. Insert
     inserted = 0
     for j in new_jobs:
+        slug = j.get("_studio_slug")
         row = {
             "source": j["source"],
             "source_id": j["source_id"],
@@ -147,8 +163,17 @@ def main():
         try:
             sb.table("jobs").insert(row).execute()
             inserted += 1
+            if slug and slug in studio_results:
+                studio_results[slug]["inserted_count"] += 1
         except Exception as e:
             errors.append({"type": "insert_error", "company": j["company"], "title": j["title"], "error": str(e)})
+
+    # 5b. Write per-studio results for the dashboard later.
+    for slug, result in studio_results.items():
+        try:
+            sb.table("run_studio_results").insert({**result, "run_id": run_id}).execute()
+        except Exception as e:
+            errors.append({"type": "studio_result_error", "studio": slug, "error": str(e)})
 
     # 6. Close run log
     sb.table("runs").update({

@@ -24,7 +24,7 @@ export type Job = {
   jd_text: string | null;
   fit_score: number | null;
   fit_rationale: string | null;
-  status: "new" | "interested" | "skip" | "applied";
+  status: "new" | "interested" | "skip" | "applied" | "screen" | "rejected" | "withdrawn" | "offer" | "ghosted";
   letter_text: string | null;
   discovered_at: string;
   applied_at: string | null;

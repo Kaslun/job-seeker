@@ -12,7 +12,32 @@ const STATUS_LABELS: Record<Job["status"], string> = {
   interested: "Interested",
   skip: "Skipped",
   applied: "Applied",
+  screen: "In screen",
+  rejected: "Rejected",
+  withdrawn: "Withdrew",
+  offer: "Offer",
+  ghosted: "Ghosted",
 };
+
+// Transitions that show as buttons. Terminal states get no buttons.
+const TRANSITIONS: Partial<Record<Job["status"], { to: Job["status"]; label: string; tone?: "primary" | "danger" | "flat" }[]>> = {
+  applied: [
+    { to: "screen", label: "Heard back", tone: "primary" },
+    { to: "rejected", label: "Rejected", tone: "danger" },
+    { to: "ghosted", label: "Ghosted", tone: "flat" },
+    { to: "withdrawn", label: "Withdrew", tone: "flat" },
+  ],
+  screen: [
+    { to: "offer", label: "Got offer", tone: "primary" },
+    { to: "rejected", label: "Rejected", tone: "danger" },
+    { to: "withdrawn", label: "Withdrew", tone: "flat" },
+  ],
+  offer: [
+    { to: "withdrawn", label: "Withdrew", tone: "flat" },
+  ],
+};
+
+const TERMINAL: Job["status"][] = ["rejected", "withdrawn", "ghosted"];
 
 export function JobActions({ job }: { job: Job }) {
   const [mode, setMode] = useState<Mode>("actions");
@@ -251,6 +276,34 @@ export function JobActions({ job }: { job: Job }) {
           >
             View letter sent
           </button>
+        )}
+        {TRANSITIONS[status] && (
+          <>
+            <div className="eyebrow" style={{ marginTop: 12, marginBottom: 4, fontSize: 10 }}>Update status</div>
+            <div className="col gap-2">
+              {TRANSITIONS[status]!.map((t) => (
+                <button
+                  key={t.to}
+                  className={
+                    "btn " +
+                    (t.tone === "primary" ? "btn-primary" : t.tone === "danger" ? "btn-flat btn-danger" : "btn-flat")
+                  }
+                  onClick={() => updateStatus(t.to)}
+                  disabled={busy}
+                  style={{ width: "100%", justifyContent: "center", fontSize: 13 }}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
+          </>
+        )}
+        {TERMINAL.includes(status) && (
+          <div className="muted" style={{ fontSize: 12, marginTop: 8, textAlign: "center" }}>
+            {status === "rejected" && "They passed."}
+            {status === "withdrawn" && "You pulled this one."}
+            {status === "ghosted" && "Heard nothing back."}
+          </div>
         )}
       </div>
     </div>

@@ -3,6 +3,8 @@
 Flow:
 1. Load active studios from Supabase.
 2. For each, fetch postings via the appropriate ATS adapter.
+   - Generic studios run in parallel (different domains, safe to concurrentise).
+   - Standard ATS studios run sequentially with a small delay.
 3. Cheap filter (title, location, exclusions). Drops most.
 4. Dedupe against existing jobs in Supabase.
 5. Score remaining with Haiku. Hard cap at MAX_SCORING_CALLS.
@@ -13,6 +15,7 @@ import os
 import sys
 import time
 import traceback
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from supabase import create_client
 
@@ -75,29 +78,54 @@ def main():
     studios = studios_resp.data or []
     print(f"\n{len(studios)} active studios on automated ATS")
 
-    # 1. Fetch all
+    # 1. Fetch all — generic studios in parallel, ATS studios sequentially.
     all_jobs = []
-    studio_results: dict[str, dict] = {}  # slug -> dict for batch insert at end
-    for s in studios:
-        slug = s["slug"]
-        print(f"\n[{s['ats']}] {s['name']} ({s['ats_handle']})")
+    studio_results: dict[str, dict] = {}
+
+    generic_studios = [s for s in studios if s["ats"] == "generic"]
+    ats_studios = [s for s in studios if s["ats"] != "generic"]
+
+    def fetch_one(s: dict) -> tuple[str, list[dict], str | None, int]:
         t0 = time.time()
         jobs, err = fetch_studio(s["ats"], s["ats_handle"])
         duration_ms = int((time.time() - t0) * 1000)
+        for j in jobs:
+            j["company"] = s["name"]
+            j["_studio_slug"] = s["slug"]
+        return s["slug"], jobs, err, duration_ms
+
+    # Generic: parallel across different domains, capped at 12 concurrent workers.
+    print(f"\nFetching {len(generic_studios)} generic studios in parallel...")
+    with ThreadPoolExecutor(max_workers=12) as pool:
+        futures = {pool.submit(fetch_one, s): s for s in generic_studios}
+        for future in as_completed(futures):
+            s = futures[future]
+            slug, jobs, err, duration_ms = future.result()
+            if err:
+                print(f"  [{s['ats']}] {s['name']}: failed")
+            else:
+                print(f"  [{s['ats']}] {s['name']}: fetched {len(jobs)}")
+            all_jobs.extend(jobs)
+            studio_results[slug] = {
+                "studio_slug": slug, "ats": s["ats"],
+                "fetched_count": len(jobs), "inserted_count": 0,
+                "error": err, "duration_ms": duration_ms,
+            }
+
+    # ATS studios: sequential with a small delay to be polite.
+    print(f"\nFetching {len(ats_studios)} ATS studios sequentially...")
+    for s in ats_studios:
+        slug = s["slug"]
+        print(f"\n[{s['ats']}] {s['name']} ({s['ats_handle']})")
+        slug, jobs, err, duration_ms = fetch_one(s)
         if err:
             print(f"  failed: {err}")
         print(f"  fetched {len(jobs)}")
-        for j in jobs:
-            j["company"] = s["name"]
-            j["_studio_slug"] = slug  # tag for inserted_count tracking
-            all_jobs.append(j)
+        all_jobs.extend(jobs)
         studio_results[slug] = {
-            "studio_slug": slug,
-            "ats": s["ats"],
-            "fetched_count": len(jobs),
-            "inserted_count": 0,  # filled in after insert step
-            "error": err,
-            "duration_ms": duration_ms,
+            "studio_slug": slug, "ats": s["ats"],
+            "fetched_count": len(jobs), "inserted_count": 0,
+            "error": err, "duration_ms": duration_ms,
         }
         time.sleep(0.5)
 

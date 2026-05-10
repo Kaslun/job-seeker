@@ -69,7 +69,7 @@ def _fetch_sitemap_urls(root_url: str, base_host: str) -> list[str]:
 
     for sm_url in candidates:
         try:
-            r = httpx.get(sm_url, timeout=15, headers=HEADERS, follow_redirects=True)
+            r = httpx.get(sm_url, timeout=8, headers=HEADERS, follow_redirects=True)
             if r.status_code != 200 or "<" not in r.text[:500]:
                 continue
             try:
@@ -92,7 +92,7 @@ def _fetch_sitemap_urls(root_url: str, base_host: str) -> list[str]:
     if not found and sub_sitemaps:
         for sm_url in sub_sitemaps[:5]:
             try:
-                r = httpx.get(sm_url, timeout=15, headers=HEADERS, follow_redirects=True)
+                r = httpx.get(sm_url, timeout=8, headers=HEADERS, follow_redirects=True)
                 if r.status_code != 200:
                     continue
                 root = ET.fromstring(r.text)
@@ -216,9 +216,9 @@ def fetch(handle: str) -> list[dict]:
 
     out: list[dict] = []
 
-    # Index page JSON-LD
+    # Step 1: JSON-LD on the index page (one fast request).
     try:
-        index_r = httpx.get(handle, timeout=20, headers=HEADERS, follow_redirects=True)
+        index_r = httpx.get(handle, timeout=10, headers=HEADERS, follow_redirects=True)
         if index_r.status_code == 200:
             for item in _extract_json_ld_jobs(index_r.text):
                 norm = _normalize(item, str(index_r.url))
@@ -230,14 +230,17 @@ def fetch(handle: str) -> list[dict]:
     if out:
         return _dedupe(out)
 
-    # Sitemap discovery, then fall back to index crawl.
+    # Step 2: sitemap discovery.
     job_urls = _fetch_sitemap_urls(handle, base_host)
-    if not job_urls:
-        job_urls = _fallback_index_crawl(handle, base_host)
 
+    # If sitemap returned nothing, stop. Don't hammer individual pages blindly.
+    if not job_urls:
+        return []
+
+    # Step 3: fetch sitemap-discovered job pages and extract JSON-LD.
     for url in job_urls[:40]:
         try:
-            jr = httpx.get(url, timeout=15, headers=HEADERS, follow_redirects=True)
+            jr = httpx.get(url, timeout=10, headers=HEADERS, follow_redirects=True)
             if jr.status_code != 200:
                 continue
             for item in _extract_json_ld_jobs(jr.text):

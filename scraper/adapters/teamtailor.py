@@ -8,6 +8,7 @@ import httpx
 import re
 import json
 from bs4 import BeautifulSoup
+from scraper.clean import clean_text
 
 
 def fetch(handle: str) -> list[dict]:
@@ -83,7 +84,7 @@ def fetch(handle: str) -> list[dict]:
                         if not isinstance(item, dict):
                             continue
                         if item.get("@type") == "JobPosting":
-                            jd_text = BeautifulSoup(item.get("description", ""), "html.parser").get_text("\n", strip=True)
+                            jd_text = clean_text(item.get("description", ""))
                             loc = item.get("jobLocation", {})
                             if isinstance(loc, list) and loc:
                                 loc = loc[0]

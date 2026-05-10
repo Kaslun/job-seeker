@@ -1,20 +1,9 @@
-"""Workable public job board API.
-Two URL patterns exist; we try both.
-"""
+"""Workable public job board API."""
 import httpx
-from bs4 import BeautifulSoup
-
-
-def html_to_text(html: str) -> str:
-    if not html:
-        return ""
-    return BeautifulSoup(html, "html.parser").get_text("\n", strip=True)
+from scraper.clean import clean_text
 
 
 def fetch(handle: str) -> list[dict]:
-    # Workable has a public JSON endpoint that lists postings.
-    # The /spi/v3/accounts/{handle}/jobs endpoint requires auth, so we use the
-    # public widget endpoint instead.
     urls = [
         f"https://apply.workable.com/api/v1/widget/accounts/{handle}",
         f"https://{handle}.workable.com/api/jobs",
@@ -22,7 +11,7 @@ def fetch(handle: str) -> list[dict]:
     data = None
     for url in urls:
         try:
-            r = httpx.get(url, timeout=30, follow_redirects=True)
+            r = httpx.get(url, timeout=30, follow_redirects=True, headers={"User-Agent": "Mozilla/5.0"})
             if r.status_code == 200:
                 data = r.json()
                 break
@@ -62,6 +51,6 @@ def fetch(handle: str) -> list[dict]:
             "location": location,
             "remote_type": remote,
             "salary_text": "",
-            "jd_text": html_to_text(j.get("description", "") or j.get("full_description", "")),
+            "jd_text": clean_text(j.get("description", "") or j.get("full_description", "")),
         })
     return out

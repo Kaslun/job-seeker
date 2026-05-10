@@ -166,7 +166,12 @@ def main():
             if slug and slug in studio_results:
                 studio_results[slug]["inserted_count"] += 1
         except Exception as e:
-            errors.append({"type": "insert_error", "company": j["company"], "title": j["title"], "error": str(e)})
+            err_msg = str(e)
+            # Dedupe collisions are expected (same job from two studios sharing a tenant)
+            # and not errors we care about.
+            if "duplicate key" in err_msg or "23505" in err_msg:
+                continue
+            errors.append({"type": "insert_error", "company": j["company"], "title": j["title"], "error": err_msg})
 
     # 5b. Write per-studio results for the dashboard later.
     for slug, result in studio_results.items():

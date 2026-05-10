@@ -53,6 +53,6 @@ Norwegian (native) | English (fluent, C2) | Spanish (intermediate, B1)
 
 - **Target roles:** Game Designer, Technical Designer, Technical Game Designer, Systems Designer, Gameplay Designer, Narrative Systems Designer, AI Designer (games), Game AI Designer.
 - **Seniority:** Mid to Senior.
-- **Location:** Norway preferred. Open to hybrid roles in EU/UK if relocation or significant travel is feasible. Fully remote roles must accept candidates based in Norway.
+- **Location:** Norway preferred, but Stockholm, Copenhagen, Helsinki, and other Nordic cities are easy relocations and shouldn't be penalized in scoring. Other European cities (Berlin, Amsterdam, London, Warsaw, Paris, Frankfurt, etc.) are open if the role is strong, hybrid, or remote-friendly. Fully remote roles must accept candidates based in Norway.
 - **Excluded:** Casino, slots, gambling, hyper-casual, match-3 cloners, idle/clicker.
 - **Salary floor:** 700,000 NOK or equivalent.

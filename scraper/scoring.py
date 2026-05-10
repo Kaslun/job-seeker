@@ -29,12 +29,17 @@ You will be given the candidate's CV and a job description. Output a single JSON
 {"score": <integer 1-10>, "rationale": "<one short sentence>"}
 
 Scoring guide:
-- 9-10: Strong match on role, seniority, location, and skills. Worth applying.
-- 7-8: Good match with one gap (e.g. seniority slightly off, location requires relocation).
+- 9-10: Strong match on role, seniority, and skills. Worth applying.
+- 7-8: Good match with one gap (e.g. seniority slightly off, secondary skill missing).
 - 5-6: Partial match. Some relevant skills but role family or seniority is misaligned.
 - 1-4: Poor match. Wrong role family, wrong seniority, location impossible, excluded sector.
 
-Score harshly. Most jobs should land at 5 or below. Reserve 8+ for genuinely strong fits.
+Score harshly on role/seniority/skill fit. Reserve 8+ for genuinely strong fits.
+
+Location guidance:
+- Don't penalize Nordic cities (Stockholm, Copenhagen, Helsinki, Reykjavik, etc.) at all when the candidate's home country is Norway. Treat them as equivalent to Norway.
+- For other EU cities, only deduct 1 point if the role is otherwise excellent and onsite-only. Hybrid or remote-friendly EU roles should not be penalized for location.
+- A US-only or APAC-only role with no remote-from-Norway option is a hard fail (score 1-3 regardless of skill match).
 
 Pay attention to the candidate's stated preferences in the CV (target roles, seniority, location, exclusions).
 

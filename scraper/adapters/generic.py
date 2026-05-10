@@ -1,56 +1,125 @@
 """Generic careers page scraper.
 
-Many studios have bespoke careers pages but include JobPosting structured data
-(JSON-LD) for SEO. This adapter extracts those without per-site code.
+Strategy (in order):
+1. Fetch the careers index page; check for JSON-LD JobPosting entries directly.
+2. Try sitemap.xml at the root of the careers domain. Filter URLs matching job
+   detail patterns. Fetch each one, look for JSON-LD JobPosting entries.
+3. If sitemap is empty or absent, crawl the index page for links matching job
+   patterns and visit those.
 
-`ats_handle` for the 'generic' adapter should be the careers index URL:
-  e.g. "https://www.remedygames.com/careers/"
-
-It will:
-1. Fetch the index page.
-2. Look for JSON-LD JobPosting entries directly (some sites embed all jobs).
-3. If none found, look for links matching common career path patterns and
-   fetch those individually for JSON-LD.
-
-If no JobPosting JSON-LD exists anywhere, returns empty. (LLM extraction is
-out of scope for now to keep cost predictable.)
+`ats_handle` should be the careers index URL, e.g. "https://www.remedygames.com/careers".
 """
 import httpx
 import json
 import re
 from urllib.parse import urljoin, urlparse
+from xml.etree import ElementTree as ET
 from bs4 import BeautifulSoup
 from scraper.clean import clean_text
 
 
-JOB_LINK_PATTERNS = [
-    r"/careers?/",
-    r"/jobs?/",
-    r"/positions?/",
-    r"/openings?/",
-    r"/vacancies/",
-    r"/job-",
-    r"/role/",
+JOB_PATH_PATTERNS = [
+    r"/careers?/[^/]+/?$",
+    r"/jobs?/[^/]+/?$",
+    r"/positions?/[^/]+/?$",
+    r"/openings?/[^/]+/?$",
+    r"/vacancies?/[^/]+/?$",
+    r"/role/[^/]+/?$",
+    r"/job-[a-z0-9-]+/?$",
 ]
 
+INDEX_PATTERNS = [
+    r"/careers/?$",
+    r"/jobs/?$",
+    r"/career/?$",
+    r"/openings/?$",
+    r"/positions/?$",
+    r"/vacancies/?$",
+    r"/recrutement/?$",
+]
 
-def _is_job_link(href: str, base_host: str) -> bool:
-    if not href or href.startswith("#"):
+HEADERS = {"User-Agent": "Mozilla/5.0 (compatible; job-seeker/1.0)"}
+
+
+def _is_job_url(url: str, base_host: str) -> bool:
+    if not url:
         return False
     try:
-        parsed = urlparse(href)
+        parsed = urlparse(url)
     except Exception:
         return False
-    # Same host or relative
     if parsed.netloc and parsed.netloc != base_host:
         return False
     path = parsed.path or ""
-    return any(re.search(pat, path) for pat in JOB_LINK_PATTERNS)
+    if any(re.search(pat, path, re.IGNORECASE) for pat in INDEX_PATTERNS):
+        return False
+    return any(re.search(pat, path, re.IGNORECASE) for pat in JOB_PATH_PATTERNS)
 
 
-def _extract_json_ld_jobs(html: str, base_url: str) -> list[dict]:
+def _fetch_sitemap_urls(root_url: str, base_host: str) -> list[str]:
+    parsed = urlparse(root_url)
+    base = f"{parsed.scheme}://{parsed.netloc}"
+    candidates = [
+        f"{base}/sitemap.xml",
+        f"{base}/sitemap_index.xml",
+        f"{base}/sitemap-index.xml",
+    ]
+    found: list[str] = []
+    sub_sitemaps: list[str] = []
+
+    for sm_url in candidates:
+        try:
+            r = httpx.get(sm_url, timeout=15, headers=HEADERS, follow_redirects=True)
+            if r.status_code != 200 or "<" not in r.text[:500]:
+                continue
+            try:
+                root = ET.fromstring(r.text)
+            except ET.ParseError:
+                continue
+            for el in root.iter():
+                tag = el.tag.rsplit("}", 1)[-1]
+                if tag == "loc" and el.text:
+                    url = el.text.strip()
+                    if url.endswith(".xml"):
+                        sub_sitemaps.append(url)
+                    elif _is_job_url(url, base_host):
+                        found.append(url)
+            if found:
+                break
+        except Exception:
+            continue
+
+    if not found and sub_sitemaps:
+        for sm_url in sub_sitemaps[:5]:
+            try:
+                r = httpx.get(sm_url, timeout=15, headers=HEADERS, follow_redirects=True)
+                if r.status_code != 200:
+                    continue
+                root = ET.fromstring(r.text)
+                for el in root.iter():
+                    tag = el.tag.rsplit("}", 1)[-1]
+                    if tag == "loc" and el.text:
+                        url = el.text.strip()
+                        if _is_job_url(url, base_host):
+                            found.append(url)
+            except Exception:
+                continue
+
+    seen = set()
+    uniq = []
+    for u in found:
+        if u in seen:
+            continue
+        seen.add(u)
+        uniq.append(u)
+        if len(uniq) >= 80:
+            break
+    return uniq
+
+
+def _extract_json_ld_jobs(html: str) -> list[dict]:
     soup = BeautifulSoup(html, "html.parser")
-    found = []
+    out = []
     for script in soup.find_all("script", type="application/ld+json"):
         if not script.string:
             continue
@@ -59,25 +128,19 @@ def _extract_json_ld_jobs(html: str, base_url: str) -> list[dict]:
         except Exception:
             continue
         items = data if isinstance(data, list) else [data]
-        # Some sites wrap with @graph
         for item in list(items):
             if isinstance(item, dict) and isinstance(item.get("@graph"), list):
                 items.extend(item["@graph"])
         for item in items:
-            if not isinstance(item, dict):
-                continue
-            if item.get("@type") != "JobPosting":
-                continue
-            found.append(item)
-    return found
+            if isinstance(item, dict) and item.get("@type") == "JobPosting":
+                out.append(item)
+    return out
 
 
-def _normalize_jsonld_job(item: dict, source_page_url: str) -> dict | None:
+def _normalize(item: dict, page_url: str) -> dict | None:
     title = (item.get("title") or "").strip()
     if not title:
         return None
-
-    # Location
     loc_obj = item.get("jobLocation")
     if isinstance(loc_obj, list) and loc_obj:
         loc_obj = loc_obj[0]
@@ -85,31 +148,25 @@ def _normalize_jsonld_job(item: dict, source_page_url: str) -> dict | None:
     if isinstance(loc_obj, dict):
         addr = loc_obj.get("address") or {}
         if isinstance(addr, dict):
-            location = ", ".join(
-                p for p in [addr.get("addressLocality", ""), addr.get("addressRegion", ""), addr.get("addressCountry", "")]
-                if p
-            )
+            location = ", ".join(p for p in [
+                addr.get("addressLocality", ""),
+                addr.get("addressRegion", ""),
+                addr.get("addressCountry", ""),
+            ] if p)
 
-    remote_type = ""
-    if item.get("jobLocationType") == "TELECOMMUTE":
-        remote_type = "remote"
+    remote_type = "remote" if item.get("jobLocationType") == "TELECOMMUTE" else ""
 
-    # Identifier
     ident = item.get("identifier") or {}
     if isinstance(ident, dict):
-        source_id = str(ident.get("value", "")) or item.get("url", "")
+        source_id = str(ident.get("value") or item.get("url") or page_url)
     else:
-        source_id = str(ident) or item.get("url", "")
-
-    if not source_id:
-        # Fall back to title+location hash
-        source_id = f"{title}|{location}"
+        source_id = str(ident or item.get("url") or page_url)
 
     return {
         "source": "generic",
         "source_id": source_id,
         "title": title,
-        "url": item.get("url") or source_page_url,
+        "url": item.get("url") or page_url,
         "location": location,
         "remote_type": remote_type,
         "salary_text": "",
@@ -117,60 +174,77 @@ def _normalize_jsonld_job(item: dict, source_page_url: str) -> dict | None:
     }
 
 
+def _fallback_index_crawl(root_url: str, base_host: str) -> list[str]:
+    try:
+        r = httpx.get(root_url, timeout=20, headers=HEADERS, follow_redirects=True)
+        if r.status_code != 200:
+            return []
+    except Exception:
+        return []
+    soup = BeautifulSoup(r.text, "html.parser")
+    urls = []
+    seen = set()
+    for a in soup.find_all("a", href=True):
+        absolute = urljoin(str(r.url), a["href"])
+        if _is_job_url(absolute, base_host) and absolute not in seen:
+            seen.add(absolute)
+            urls.append(absolute)
+            if len(urls) >= 40:
+                break
+    return urls
+
+
+def _dedupe(jobs: list[dict]) -> list[dict]:
+    seen = set()
+    out = []
+    for j in jobs:
+        key = (j["source_id"], j["url"])
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append(j)
+    return out
+
+
 def fetch(handle: str) -> list[dict]:
     if not handle.startswith("http"):
         return []
-
-    headers = {"User-Agent": "Mozilla/5.0 (compatible; job-seeker/1.0)"}
-    try:
-        r = httpx.get(handle, timeout=30, follow_redirects=True, headers=headers)
-        r.raise_for_status()
-    except Exception:
+    parsed = urlparse(handle)
+    base_host = parsed.netloc
+    if not base_host:
         return []
 
-    base_host = urlparse(str(r.url)).netloc
-    out = []
+    out: list[dict] = []
 
-    # Pass 1: JSON-LD on the index page.
-    direct = _extract_json_ld_jobs(r.text, str(r.url))
-    for item in direct:
-        norm = _normalize_jsonld_job(item, str(r.url))
-        if norm:
-            out.append(norm)
+    # Index page JSON-LD
+    try:
+        index_r = httpx.get(handle, timeout=20, headers=HEADERS, follow_redirects=True)
+        if index_r.status_code == 200:
+            for item in _extract_json_ld_jobs(index_r.text):
+                norm = _normalize(item, str(index_r.url))
+                if norm:
+                    out.append(norm)
+    except Exception:
+        pass
 
     if out:
-        return out
+        return _dedupe(out)
 
-    # Pass 2: discover individual job pages.
-    soup = BeautifulSoup(r.text, "html.parser")
-    candidate_urls = set()
-    for a in soup.find_all("a", href=True):
-        href = a["href"]
-        absolute = urljoin(str(r.url), href)
-        if _is_job_link(absolute, base_host):
-            candidate_urls.add(absolute)
-        if len(candidate_urls) >= 30:
-            break
+    # Sitemap discovery, then fall back to index crawl.
+    job_urls = _fetch_sitemap_urls(handle, base_host)
+    if not job_urls:
+        job_urls = _fallback_index_crawl(handle, base_host)
 
-    for u in list(candidate_urls)[:25]:  # cap to avoid runaway
+    for url in job_urls[:40]:
         try:
-            jr = httpx.get(u, timeout=15, headers=headers, follow_redirects=True)
+            jr = httpx.get(url, timeout=15, headers=HEADERS, follow_redirects=True)
             if jr.status_code != 200:
                 continue
-            for item in _extract_json_ld_jobs(jr.text, u):
-                norm = _normalize_jsonld_job(item, u)
+            for item in _extract_json_ld_jobs(jr.text):
+                norm = _normalize(item, url)
                 if norm:
                     out.append(norm)
         except Exception:
             continue
 
-    # Dedupe by (source_id, url) tuple in case the same JD appears twice.
-    seen = set()
-    deduped = []
-    for j in out:
-        key = (j["source_id"], j["url"])
-        if key in seen:
-            continue
-        seen.add(key)
-        deduped.append(j)
-    return deduped
+    return _dedupe(out)

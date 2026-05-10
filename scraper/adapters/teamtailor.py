@@ -11,12 +11,22 @@ from bs4 import BeautifulSoup
 
 
 def fetch(handle: str) -> list[dict]:
+    # Some studios have custom Teamtailor domains (e.g. embark-studios → careers.embark-studios.com).
+    # If the handle contains a dot or hyphen suggesting a full domain, try it directly.
+    if "." in handle:
+        custom_base = f"https://{handle}"
+    else:
+        custom_base = None
+
     base = f"https://career.{handle}.com"
     candidates = [
         f"{base}/jobs",
         f"https://{handle}.teamtailor.com/jobs",
         f"https://careers.{handle}.com/jobs",
+        f"https://jobs.{handle}.com/jobs",
     ]
+    if custom_base:
+        candidates = [f"{custom_base}/jobs"] + candidates
     html = ""
     base_used = ""
     for url in candidates:

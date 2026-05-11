@@ -1,11 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { Job } from "@/lib/supabase";
 import { Icon } from "@/components/visual";
-
-type Mode = "actions" | "drafting" | "draft";
 
 const STATUS_LABELS: Record<Job["status"], string> = {
   new: "New",
@@ -19,7 +18,6 @@ const STATUS_LABELS: Record<Job["status"], string> = {
   ghosted: "Ghosted",
 };
 
-// Transitions that show as buttons. Terminal states get no buttons.
 const TRANSITIONS: Partial<Record<Job["status"], { to: Job["status"]; label: string; tone?: "primary" | "danger" | "flat" }[]>> = {
   applied: [
     { to: "screen", label: "Heard back", tone: "primary" },
@@ -40,9 +38,7 @@ const TRANSITIONS: Partial<Record<Job["status"], { to: Job["status"]; label: str
 const TERMINAL: Job["status"][] = ["rejected", "withdrawn", "ghosted"];
 
 export function JobActions({ job }: { job: Job }) {
-  const [mode, setMode] = useState<Mode>("actions");
   const [status, setStatus] = useState(job.status);
-  const [letter, setLetter] = useState(job.letter_text || "");
   const [busy, setBusy] = useState(false);
   const router = useRouter();
 
@@ -64,147 +60,7 @@ export function JobActions({ job }: { job: Job }) {
     }
   };
 
-  const generateDraft = async () => {
-    setMode("drafting");
-    try {
-      const res = await fetch(`/api/draft-letter`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ jobId: job.id, mode: "single" }),
-      });
-      if (!res.ok) throw new Error(await res.text());
-      const json = await res.json();
-      setLetter(json.letter || "");
-      setMode("draft");
-    } catch (e: any) {
-      alert("Failed: " + e.message);
-      setMode("actions");
-    }
-  };
-
-  const openSavedDraft = () => {
-    setLetter(job.letter_text || "");
-    setMode("draft");
-  };
-
-  const saveLetter = async () => {
-    setBusy(true);
-    try {
-      await fetch(`/api/jobs/${job.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ letter_text: letter }),
-      });
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const markApplied = async () => {
-    setBusy(true);
-    try {
-      const res = await fetch(`/api/jobs/${job.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          status: "applied",
-          letter_text: letter,
-          applied_at: new Date().toISOString(),
-        }),
-      });
-      if (!res.ok) throw new Error(await res.text());
-      setStatus("applied");
-      router.push("/applied");
-    } catch (e: any) {
-      alert("Failed: " + e.message);
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const regenerate = async () => {
-    if (letter && !confirm("Replace your current draft with a fresh one?")) return;
-    await generateDraft();
-  };
-
-  if (mode === "drafting") {
-    return (
-      <div className="card p-5">
-        <div className="eyebrow" style={{ marginBottom: 12 }}>Drafting letter</div>
-        <p className="muted" style={{ fontSize: 13, marginTop: 0 }}>
-          Writing in your voice. Takes about 10 seconds.
-        </p>
-        <div className="col gap-2" style={{ marginTop: 16 }}>
-          <div className="skeleton" style={{ height: 12 }} />
-          <div className="skeleton" style={{ height: 12, width: "92%" }} />
-          <div className="skeleton" style={{ height: 12, width: "88%" }} />
-          <div className="skeleton" style={{ height: 12, width: "70%" }} />
-          <div className="skeleton" style={{ height: 12, marginTop: 12 }} />
-          <div className="skeleton" style={{ height: 12, width: "94%" }} />
-          <div className="skeleton" style={{ height: 12, width: "60%" }} />
-        </div>
-      </div>
-    );
-  }
-
-  if (mode === "draft") {
-    return (
-      <div className="card p-5">
-        <div className="row between" style={{ marginBottom: 12 }}>
-          <div className="eyebrow">Application letter</div>
-          <span className="mono dim" style={{ fontSize: 11 }}>{wordCount(letter)} words</span>
-        </div>
-        <textarea
-          value={letter}
-          onChange={(e) => setLetter(e.target.value)}
-          rows={18}
-          style={{ fontFamily: "var(--f-body)", fontSize: 14 }}
-        />
-        <div className="col gap-2" style={{ marginTop: 14 }}>
-          <a
-            href={job.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="btn"
-            style={{ width: "100%", justifyContent: "center" }}
-          >
-            <Icon.external /> Open application page
-          </a>
-          <button
-            className="btn btn-primary"
-            onClick={markApplied}
-            disabled={busy}
-            style={{ width: "100%", justifyContent: "center" }}
-          >
-            <Icon.send /> Mark as applied
-          </button>
-          <button
-            className="btn btn-flat"
-            onClick={saveLetter}
-            disabled={busy}
-            style={{ width: "100%", justifyContent: "center", fontSize: 13 }}
-          >
-            Save draft (don&apos;t mark applied yet)
-          </button>
-          <button
-            className="btn btn-flat"
-            onClick={regenerate}
-            disabled={busy}
-            style={{ width: "100%", justifyContent: "center", fontSize: 13 }}
-          >
-            Regenerate from scratch
-          </button>
-          <button
-            className="btn btn-ghost"
-            onClick={() => setMode("actions")}
-            style={{ width: "100%", justifyContent: "center", fontSize: 13 }}
-          >
-            Back
-          </button>
-        </div>
-      </div>
-    );
-  }
+  const letterCta = job.letter_text ? "Edit saved letter" : "Draft letter";
 
   return (
     <div className="card p-5">
@@ -229,25 +85,13 @@ export function JobActions({ job }: { job: Job }) {
         </a>
         {status !== "applied" && (
           <>
-            {job.letter_text ? (
-              <button
-                className="btn btn-primary"
-                onClick={openSavedDraft}
-                disabled={busy}
-                style={{ width: "100%", justifyContent: "center" }}
-              >
-                Edit saved draft <Icon.arrow />
-              </button>
-            ) : (
-              <button
-                className="btn btn-primary"
-                onClick={generateDraft}
-                disabled={busy}
-                style={{ width: "100%", justifyContent: "center" }}
-              >
-                Draft letter <Icon.arrow />
-              </button>
-            )}
+            <Link
+              href={`/job/${job.id}/letter`}
+              className="btn btn-primary"
+              style={{ width: "100%", justifyContent: "center" }}
+            >
+              {letterCta} <Icon.arrow />
+            </Link>
             <div className="row gap-2" style={{ marginTop: 4 }}>
               <button
                 className="btn btn-flat"
@@ -269,13 +113,13 @@ export function JobActions({ job }: { job: Job }) {
           </>
         )}
         {status === "applied" && job.letter_text && (
-          <button
+          <Link
+            href={`/job/${job.id}/letter`}
             className="btn btn-flat"
-            onClick={openSavedDraft}
             style={{ width: "100%", justifyContent: "center", fontSize: 13 }}
           >
             View letter sent
-          </button>
+          </Link>
         )}
         {TRANSITIONS[status] && (
           <>
@@ -308,8 +152,4 @@ export function JobActions({ job }: { job: Job }) {
       </div>
     </div>
   );
-}
-
-function wordCount(s: string): number {
-  return s.trim().split(/\s+/).filter(Boolean).length;
 }

@@ -138,24 +138,54 @@ The good version names a specific thing from the JD (technical designers owning 
 
 1. **Open with one specific, honest, ungrounded-in-fabrication hook.** See "Acceptable opening hooks" above. One to two sentences of why he's writing.
 2. **A paragraph on relevant experience.** Mention shipped credits plainly. The Mørkredd / Nordic Game of the Year win is the strongest signal for game studios — state it as "I worked on Mørkredd at Hyper Games, which won Nordic Game of the Year." No softeners. No performance. Then his current role at Attensi. Then what he wants out of his next move. If there's a known skill gap relevant to the role (e.g. Unreal/Blueprint when Unity is his daily driver), acknowledge it as a passing half-sentence inside the experience paragraph, not as its own paragraph. He taught Unreal at Kristiania for two semesters, which is worth mentioning when Unreal is relevant.
-3. **One short paragraph on why this specific company/team appeals.** Studio size, culture from JD, the kind of work described in the JD. Not flattery — a real reason grounded in the JD's content.
+3. **One short paragraph on why this specific company/team appeals.** Studio size, culture from JD, the kind of work described in the JD. Not flattery. A real reason grounded in the JD's content.
 4. **Closing.** One short line about logistics (he's in Oslo, open to relocation, especially Nordic cities). One low-key sign-off, no "I'd love to" or "happy to."
 
-# Voice samples (study cadence AND level of project detail)
+# Canonical voice sample
 
-Sample paragraph 1 — opener with technology overlap:
-"I've spent the last six years building gameplay and dialogue systems in Unity. Most recently at Attensi, designing dialogue trees with branching logic and NPC behavior for simulation training. The Technical Designer role caught my eye because it asks for ownership of features from concept to implementation, which is what I've been doing day to day, just in a different domain."
+Study this letter carefully. It is the writer's own work, edited to his exact preferences, and it represents the locked target for tone, pacing, sentence structure, level of detail per project, opening pattern, and sign-off. Future letters should match this register, not the register of any earlier samples.
 
-Sample paragraph 2 — credits paragraph, flat tone on award, specifics on each role:
-"At Hyper Games I shipped gameplay code on Mørkredd, doing implementation, network prototyping, and QA. The game won Nordic Game of the Year. At Attensi I moved from gameplay developer into AI design, where I now architect content generation pipelines with Flowise, Qdrant, and RAG, and benchmark models across GPT, Claude, Gemini, Llama, and Mistral for production use. I also taught Unreal at Kristiania for two semesters, so visual scripting and engine-specific workflows aren't new to me, though I know CRYENGINE is its own thing."
+"""
+Being a gamer I'm very familiar with Crytek and your work, so when the Technical Designer role popped up I had to apply. The role mentions technical designers owning AI behavior, which is what I spent the last three years on at Attensi. Different domain. Enterprise training sims vs. shooters. But the core loop is the same. Design the system, build it in the engine, debug it with QA, iterate based on playtest feedback. That's already my day-to-day.
 
-Sample paragraph 3 — opening with design-problem framing:
-"Goat Simulator 3 caught my eye because the design problem is genuinely interesting. When a game's whole identity is 'the bug is the feature,' that flips a lot of the usual instincts about what to fix and what to leave alone."
+Before Attensi I was at Hyper Games doing gameplay programming, porting, network prototyping, and QA. One of the games I worked on, Mørkredd, won Nordic Game of the Year when it released. At Attensi I built dialogue tree systems and NPC behavior logic in Unity for simulation training, before moving into AI-powered product design, where I now architect agentic workflows using Claude and OpenAI tools, orchestrated through Flowise.
 
-Sample paragraph 4 — why-this-place + closing:
-"The thing that pushed me to actually apply is the team size. Thirty people is the size where individual designers still shape the game, which is the part of this work I miss most from the bigger setup I'm in now. Stockholm from Oslo is an easy move. Let me know if it's worth a conversation."
+I've also taught Unreal at Kristiania for two semesters, so visual scripting and engine-specific workflows aren't new to me, though I know CRYENGINE is its own thing. Unity has been my daily driver for six years, but the pattern of owning a feature from design through implementation translates regardless of the engine.
 
-Note how every job mention in sample 2 says what was done. No "worked on" or "was part of." Replicate that specificity.
+What pushed me to apply is the JD's emphasis on cross-team collaboration and bridging design with technical possibilities. That's the part of my current work I enjoy most, sitting between developers and designers, working through mockups, prototypes, and shipped product. The new Frankfurt office is also interesting. Smaller, focused teams are where I've done my best work.
+
+I'm in Oslo, open to relocation. Let me know if it's worth a conversation.
+"""
+
+# Patterns to learn from this sample
+
+1. **Opening structure.** One personal positioning fact + one role-specific hook + one casual verb of motivation ("had to apply"). The fact has to be genuinely defensible. The role hook references something specific from the JD.
+
+2. **Familiarity claim caveat.** The opener says "Being a gamer I'm very familiar with Crytek and your work." This works ONLY because the writer can genuinely defend it (he has played Crytek games and would be able to name one in an interview). For studios where the writer has no credible familiarity to claim, DO NOT use this pattern. Instead, default to the technology-overlap or design-problem opening described elsewhere in this prompt. NEVER invent familiarity.
+
+3. **The "core loop is the same" pivot.** Name a difference (domain, scale, engine), then pivot to what transfers. Short declarative sentences for the pivot. "Different domain. Enterprise training sims vs. shooters. But the core loop is the same."
+
+4. **Credits paragraph cadence.** Past role first with verb-led specifics ("gameplay programming, porting, network prototyping, and QA"). Award stated flatly, no editorializing ("won Nordic Game of the Year when it released"). Then current role with specifics on what was built ("built dialogue tree systems and NPC behavior logic in Unity"), then what came after ("before moving into AI-powered product design, where I now architect agentic workflows...").
+
+5. **Honest gap, embedded.** "Unity has been my daily driver for six years, but the pattern of owning a feature from design through implementation translates regardless of the engine." The gap is acknowledged in passing, then immediately reframed as transferable. Not headlined as its own paragraph. Not minimized either.
+
+6. **JD-anchored "why this place" paragraph.** "What pushed me to apply is the JD's emphasis on [specific JD phrase]." Then a sentence that grounds it in the writer's actual work. Then one specific observation about the studio if there's something concrete in the JD (team size, new office, project, philosophy).
+
+7. **Sign-off pattern.** Two short lines. Location/logistics. Low-key ask. "I'm in Oslo, open to relocation. Let me know if it's worth a conversation."
+
+8. **Sentence-length variety.** Mix of long-clause sentences and short declaratives. "That's already my day-to-day." "The new Frankfurt office is also interesting." Short sentences land observations or transitions. Longer sentences carry detail.
+
+9. **No em-dashes.** Where a thought needs a beat, use a period (or comma when it flows). The writer prefers three short sentences over one em-dash-spliced one.
+
+10. **Tool/technology specificity.** Tools and technologies are named directly (Unity, Flowise, Claude, OpenAI, CRYENGINE). No "various tools" or "modern AI workflows."
+
+# Anti-patterns NEVER do (extracted from prior failed drafts)
+
+- "I played [specific game] and kept thinking about [specific mechanic]." — Fabrication. The CV doesn't say he played the game.
+- "We won Nordic Game of the Year, which was unexpected." — Performative humility. Drop the softener.
+- "Doing that work on a PvPvE FPS instead of enterprise training sims sounds like the right kind of hard." — Generic. Could appear in any letter to any studio.
+- "Happy to chat about how my background fits." — Recruiter-speak. Banned.
+- "I had to apply because [generic enthusiasm about studio culture]" — Hollow opener. The hook must be a concrete, defensible fact.
 
 # Output
 

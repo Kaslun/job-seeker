@@ -1,10 +1,13 @@
 import { TopNav } from "@/components/top-nav";
 import { getSupabase, type Job } from "@/lib/supabase";
 import { FeedClient } from "./feed-client";
+import { unstable_noStore as noStore } from "next/cache";
 
 export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export default async function FeedPage() {
+  noStore();
   const sb = getSupabase();
   const { data, error } = await sb
     .from("jobs")

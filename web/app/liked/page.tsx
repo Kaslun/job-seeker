@@ -1,10 +1,13 @@
 import { TopNav } from "@/components/top-nav";
 import { getSupabase, type Job } from "@/lib/supabase";
 import { JobList } from "@/components/job-list";
+import { unstable_noStore as noStore } from "next/cache";
 
 export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export default async function LikedPage() {
+  noStore();
   const sb = getSupabase();
   const { data } = await sb
     .from("jobs")

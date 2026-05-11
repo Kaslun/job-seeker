@@ -30,6 +30,7 @@ export function FeedClient({ initialJobs }: { initialJobs: Job[] }) {
       // Wait for animation to finish, then drop from list.
       await new Promise((r) => setTimeout(r, 350));
       setJobs((js) => js.filter((j) => j.id !== job.id));
+      router.refresh();
     } catch (e: any) {
       // Roll back
       setFading((f) => ({ ...f, [job.id]: undefined }));

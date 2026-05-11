@@ -97,6 +97,7 @@ export function LetterClient({ job }: { job: Job }) {
         }),
       });
       if (!res.ok) throw new Error(await res.text());
+      router.refresh();
       router.push("/applied");
     } catch (e: any) {
       setError(e.message);

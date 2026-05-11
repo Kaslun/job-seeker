@@ -18,29 +18,29 @@ Prompt engineer and AI designer with hands-on experience designing prompts acros
 ## Experience
 
 ### Product Designer (AI Designer) — Attensi, Oslo (Feb 2025 – Present)
-- Design prompts and interaction models for autonomous AI agents with dynamic personality controls.
-- Architect AI content generation pipelines using Flowise Agent 2.0, Qdrant vector stores, OpenAI embeddings, and RAG.
-- Evaluate and benchmark language models (GPT-4, Claude, Gemini, Llama, Mistral) for production use.
-- Define prompt engineering best practices and support cross-functional teams.
-- Achieved 3x system performance improvement and 50% faster content production.
+- Designed prompts and interaction models for autonomous AI agents with dynamic personality controls, configuring parameters across multiple language models for simulation-based training products.
+- Architected AI content generation pipelines using Flowise Agent 2.0, Qdrant vector stores, OpenAI embeddings, and RAG. Implemented moderation filters, divergence detection, and error correction for prompt consistency.
+- Evaluated and benchmarked GPT-4, Claude, Gemini, Llama, and Mistral for production use, weighing reasoning quality, latency, and cost trade-offs.
+- Established prompt engineering best practices, documented them, and supported cross-functional teams in AI adoption through Figma prototypes and hands-on collaboration.
+- Achieved 3x system performance improvement and 50% faster content production through prompt optimization.
 
 ### Gameplay Developer — Attensi, Oslo (Nov 2021 – Feb 2025)
-- Developed interactive simulation modules in Unity for enterprise training.
-- Built complex dialogue tree systems with branching narratives, NPC behavior logic.
-- Optimized performance across mobile and web platforms.
+- Built interactive simulation modules in Unity for enterprise training, including complex dialogue tree systems with branching narratives, NPC behavior logic, and context-sensitive content.
+- Scoped AI-driven features with designers, product owners, and QA in cross-functional teams, then iterated based on playtest and user feedback.
+- Optimized performance across mobile and web platforms, including Android builds, memory management, and 3D rendering.
 
 ### Gameplay and Network Programmer — Hyper Games, Oslo (May 2019 – Dec 2019)
-- Contributed to "Mørkredd" — winner of Nordic Game of the Year 2021, Best Game Design, and Best Art at the Nordic Game Awards.
-- Worked on "Mosaic" (Krillbite/Raw Fury), a narrative-driven adventure released on Apple Arcade, Steam, and consoles.
+- Shipped gameplay code on "Mørkredd" (winner: Nordic Game of the Year 2021, Best Game Design, Best Art at the Nordic Game Awards). Responsibilities included gameplay implementation, network prototyping, and QA.
+- Also contributed to "Mosaic" (Krillbite/Raw Fury), a narrative-driven adventure released on Apple Arcade, Steam, and consoles.
 
 ### Lecturer — Kristiania University College, Oslo (Oct–Nov 2020 & Oct–Nov 2023)
-- Taught game design and Unreal Engine.
+- Taught game design and Unreal Engine to classes of 12–14 students for two semester-length blocks.
 
 ## Education
-BA in Game Design — Westerdals Oslo ACT (now Kristiania University College), 2018.
+BA in Game Design — Westerdals Oslo ACT (now Kristiania University College), 2018. Thesis: lead gameplay programmer on a 3D physics-based Unity game with a light-orb mechanic.
 
 ## Skills
-Unity (Expert, 6+ years), Unreal Engine, C#, dialogue systems, branching narrative, prompt engineering, RAG, agentic workflows.
+Unity (expert, 6+ years), Unreal Engine, C#, dialogue systems, branching narrative, prompt engineering, RAG, agentic workflows, function calling, Flowise, LangChain, Qdrant.
 
 ## Languages
 Norwegian (native), English (C2), Spanish (B1).
@@ -87,9 +87,21 @@ What's NOT acceptable as an opener:
 
 If the JD or studio name is unfamiliar and there's no honest hook, default to the technology/discipline overlap or the design-problem framing.
 
+# Specificity rule (NON-NEGOTIABLE)
+
+When mentioning a past role, project, or company, say what was actually built, shipped, or owned — not what was "worked on" or "contributed to." Vague verbs ("worked on," "contributed to," "was part of," "was involved in") signal a CV the writer hasn't internalized. Use the specific verbs from the CV: built, shipped, designed, architected, optimized, taught, implemented. Pair each verb with a concrete thing — a system, a feature, a deliverable, a metric.
+
+Bad (banned): "I worked on Mørkredd at Hyper Games."
+Good: "I shipped gameplay code on Mørkredd at Hyper Games, doing implementation, network prototyping, and QA. The game won Nordic Game of the Year."
+
+Bad: "I've been at Attensi for a few years working on training simulations."
+Good: "At Attensi I built dialogue tree systems and NPC behavior logic in Unity for enterprise training sims, then moved into designing prompts and agentic workflows for AI-driven training agents."
+
+Every CV mention must include the actual work, not just the project name. If the letter mentions a job, the next phrase or sentence must specify what was done in that job.
+
 # Hard rules
 
-- First person. Around 230–250 words. Never longer than 260, never shorter than 200.
+- First person. Around 240–280 words. Never longer than 300, never shorter than 220. The specifics matter more than the length cap; if the letter needs an extra sentence to say what was actually done on a project, take the sentence.
 - NO em-dashes anywhere. Use a period, comma, or rephrase. This is a hard ban.
 - NO buzzwords or recruiter-speak. Banned: leverage, robust, comprehensive, passionate, dynamic, synergy, transformative, innovative, cutting-edge, seamless, ecosystem, journey, dive into, unlock, real impact, take ownership, cross-discipline collaboration, play well together, bring to the table, hit the ground running, that being said, in today's fast-paced world, happy to chat about how my background fits.
 - No "Dear hiring manager" header. No signature block. Just the letter body, plain text.
@@ -104,16 +116,21 @@ If the JD or studio name is unfamiliar and there's no honest hook, default to th
 3. **One short paragraph on why this specific company/team appeals.** Studio size, culture from JD, the kind of work described in the JD. Not flattery — a real reason grounded in the JD's content.
 4. **Closing.** One short line about logistics (he's in Oslo, open to relocation, especially Nordic cities). One low-key sign-off, no "I'd love to" or "happy to."
 
-# Voice samples (study the cadence)
+# Voice samples (study cadence AND level of project detail)
 
-Sample paragraph 1:
-"I've spent the last six years wrangling dialogue trees and gameplay systems in Unity, mostly at Attensi building branching narrative for training simulations. Goat Simulator 3 caught my eye because the design problem is genuinely interesting. When a game's whole identity is 'the bug is the feature,' that flips a lot of the usual instincts about what to fix and what to leave alone."
+Sample paragraph 1 — opener with technology overlap:
+"I've spent the last six years building gameplay and dialogue systems in Unity. Most recently at Attensi, designing dialogue trees with branching logic and NPC behavior for simulation training. The Technical Designer role caught my eye because it asks for ownership of features from concept to implementation, which is what I've been doing day to day, just in a different domain."
 
-Sample paragraph 2 (note the flat tone on the award):
-"I worked on Mørkredd at Hyper Games, which won Nordic Game of the Year. The thing I took from that project was how to keep systems coherent when scope shifts under you."
+Sample paragraph 2 — credits paragraph, flat tone on award, specifics on each role:
+"At Hyper Games I shipped gameplay code on Mørkredd, doing implementation, network prototyping, and QA. The game won Nordic Game of the Year. At Attensi I moved from gameplay developer into AI design, where I now architect content generation pipelines with Flowise, Qdrant, and RAG, and benchmark models across GPT, Claude, Gemini, Llama, and Mistral for production use. I also taught Unreal at Kristiania for two semesters, so visual scripting and engine-specific workflows aren't new to me, though I know CRYENGINE is its own thing."
 
-Sample paragraph 3 (closing):
+Sample paragraph 3 — opening with design-problem framing:
+"Goat Simulator 3 caught my eye because the design problem is genuinely interesting. When a game's whole identity is 'the bug is the feature,' that flips a lot of the usual instincts about what to fix and what to leave alone."
+
+Sample paragraph 4 — why-this-place + closing:
 "The thing that pushed me to actually apply is the team size. Thirty people is the size where individual designers still shape the game, which is the part of this work I miss most from the bigger setup I'm in now. Stockholm from Oslo is an easy move. Let me know if it's worth a conversation."
+
+Note how every job mention in sample 2 says what was done. No "worked on" or "was part of." Replicate that specificity.
 
 # Output
 

@@ -10,22 +10,22 @@ Prompt engineer and AI designer with hands-on experience designing prompts acros
 
 ### Product Designer (AI Designer) — Attensi, Oslo (Feb 2025 – Present)
 
-- Design prompts and interaction models for autonomous AI agents with dynamic personality controls, configuring parameters across multiple language models for simulation-based training products.
-- Architect AI content generation pipelines using Flowise Agent 2.0, Qdrant vector stores, OpenAI embeddings, and RAG, implementing moderation filters, divergence detection, and error correction for prompt consistency.
-- Evaluate and benchmark language models (GPT-4, Claude, Gemini, Llama, Mistral) for production use, assessing reasoning quality, latency, and cost trade-offs.
-- Define prompt engineering best practices and support cross-functional teams in AI adoption through documentation, Figma prototypes, and hands-on collaboration.
+- Designed prompts and interaction models for autonomous AI agents with dynamic personality controls, configuring parameters across multiple language models for simulation-based training products.
+- Architected AI content generation pipelines using Flowise Agent 2.0, Qdrant vector stores, OpenAI embeddings, and RAG, implementing moderation filters, divergence detection, and error correction for prompt consistency.
+- Evaluated and benchmarked GPT-4, Claude, Gemini, Llama, and Mistral for production use, assessing reasoning quality, latency, and cost trade-offs.
+- Established prompt engineering best practices and supported cross-functional teams in AI adoption through documentation, Figma prototypes, and hands-on collaboration.
 - Achieved 3x system performance improvement and 50% faster content production through prompt optimization.
 
 ### Gameplay Developer — Attensi, Oslo (Nov 2021 – Feb 2025)
 
-- Developed interactive simulation modules in Unity for enterprise training, building complex dialogue tree systems with branching narratives, NPC behavior logic, and context-sensitive content.
-- Collaborated with designers, product owners, and QA in cross-functional teams to scope AI-driven features and iterate on user experience.
+- Built interactive simulation modules in Unity for enterprise training, including complex dialogue tree systems with branching narratives, NPC behavior logic, and context-sensitive content.
+- Scoped AI-driven features with designers, product owners, and QA in cross-functional teams, then iterated based on playtest and user feedback.
 - Optimized performance across mobile and web platforms including Android builds, memory management, and 3D rendering.
 
 ### Gameplay and Network Programmer — Hyper Games, Oslo (May 2019 – Dec 2019)
 
-- Contributed to "Mørkredd" — winner of Nordic Game of the Year 2021, Best Game Design, and Best Art at the Nordic Game Awards. Responsible for gameplay implementation, network prototyping, and QA.
-- Worked on "Mosaic" (Krillbite/Raw Fury), a narrative-driven adventure released on Apple Arcade, Steam, and consoles.
+- Shipped gameplay code on "Mørkredd" — winner of Nordic Game of the Year 2021, Best Game Design, and Best Art at the Nordic Game Awards. Responsible for gameplay implementation, network prototyping, and QA.
+- Also contributed to "Mosaic" (Krillbite/Raw Fury), a narrative-driven adventure released on Apple Arcade, Steam, and consoles.
 
 ### Lecturer — Kristiania University College, Oslo (Oct–Nov 2020 & Oct–Nov 2023)
 

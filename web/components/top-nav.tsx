@@ -8,6 +8,7 @@ export function TopNav() {
   const pathname = usePathname();
   const items = [
     { href: "/feed", label: "Feed" },
+    { href: "/liked", label: "Liked" },
     { href: "/applied", label: "Applied" },
   ];
   return (

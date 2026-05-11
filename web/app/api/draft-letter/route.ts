@@ -42,6 +42,8 @@ BA in Game Design — Westerdals Oslo ACT (now Kristiania University College), 2
 ## Skills
 Unity (expert, 6+ years), Unreal Engine, C#, dialogue systems, branching narrative, prompt engineering, RAG, agentic workflows, function calling, Flowise, LangChain, Qdrant.
 
+**AI development tools used day-to-day:** Claude, Claude Code, Claude Design, ChatGPT, Codex, Cursor, Flowise.
+
 ## Languages
 Norwegian (native), English (C2), Spanish (B1).
 `;
@@ -98,6 +100,29 @@ Bad: "I've been at Attensi for a few years working on training simulations."
 Good: "At Attensi I built dialogue tree systems and NPC behavior logic in Unity for enterprise training sims, then moved into designing prompts and agentic workflows for AI-driven training agents."
 
 Every CV mention must include the actual work, not just the project name. If the letter mentions a job, the next phrase or sentence must specify what was done in that job.
+
+# Relevance filter (do this before writing)
+
+Before writing, silently identify the role's 3 most important stated requirements from the JD. Then pick the 2-3 CV elements that map most directly to those requirements. The letter should foreground those and leave everything else out, even if it's impressive.
+
+Examples of how to filter:
+
+- JD asks for "ownership of features from concept to ship" + "live service experience" + "AI behavior systems": surface the Mørkredd shipping experience, the AI design work at Attensi, and the dialogue/NPC behavior systems. Skip the model benchmarking detail — it's interesting but it's not the job.
+- JD asks for "narrative systems" + "branching content" + "tools development": surface dialogue tree systems and branching narrative for training sims. Skip RAG/Qdrant/Flowise entirely.
+- JD asks for "AI design" + "prompt engineering" + "agentic workflows": surface the current Attensi AI design role. Skip Mørkredd specifics beyond a one-line "shipped on a Nordic Game of the Year winner" credibility marker.
+
+If the role is more on the technical side, mention AI development tools used (Claude, Claude Code, Cursor) only if the JD signals modern tooling matters to them. If the role is more traditional gameplay design, skip those tools — they're noise.
+
+The letter should read like the candidate read the JD carefully and is responding to *this* role, not pasting a stock pitch.
+
+# "Why this place" paragraph — must engage with the JD
+
+The third paragraph (why this company/team appeals) must reference at least one specific thing from the JD or what's publicly knowable about the studio from the JD itself. Stated team size, stated mission, stated tech stack, stated project (if named in the JD), stated working style. NOT generic statements like "I want to work on real problems" or "the kind of work I miss" without anchoring to a JD detail.
+
+Bad: "Building AI behavior, debugging with QA, and iterating based on playtest feedback are all things I do weekly. Doing that work on a PvPvE FPS instead of enterprise training sims sounds like the right kind of hard."
+Good: "What pushed me to apply is the JD's emphasis on technical designers owning AI behavior end-to-end. That's a specific kind of role that's hard to find — most studios split it between design and engineering, and the work ends up fragmented. Doing it as one person on a live PvPvE FPS sounds like the right kind of hard."
+
+The good version names a specific thing from the JD (technical designers owning AI behavior end-to-end) and engages with it with a real observation, instead of just stating personal preferences.
 
 # Hard rules
 

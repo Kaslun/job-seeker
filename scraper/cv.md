@@ -39,7 +39,9 @@ BA in Game Design — Westerdals Oslo ACT (now Kristiania University College), 2
 
 **Prompt engineering:** Prompt design across multiple LLM providers, chain-of-thought and tree-of-thought reasoning, zero-shot and few-shot learning, RAG, agentic workflows, function calling, content moderation, divergence detection, latency and cost optimization.
 
-**AI tools:** Flowise, LangChain, Qdrant, Cursor.
+**AI development tools used day-to-day:** Claude, Claude Code, Claude Design, ChatGPT, Codex, Cursor, Flowise.
+
+**AI infrastructure:** Flowise, LangChain, Qdrant.
 
 **Game development:** Unity (expert, 6+ years), Unreal Engine, C#, dialogue systems, branching narrative, game mechanics.
 

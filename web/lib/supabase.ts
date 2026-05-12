@@ -8,6 +8,11 @@ export function getSupabase() {
   }
   return createClient(url, key, {
     auth: { persistSession: false, autoRefreshToken: false },
+    global: {
+      // Bypass Next.js's data cache for every request.
+      fetch: (url, options) =>
+        fetch(url, { ...(options as RequestInit), cache: "no-store" }),
+    },
   });
 }
 
@@ -28,4 +33,26 @@ export type Job = {
   letter_text: string | null;
   discovered_at: string;
   applied_at: string | null;
+  profile_slug: string | null;
+  lang: "en" | "no" | null;
+};
+
+export type LocationMode = "norway" | "oslo" | "nordic_eu_uk" | "custom";
+
+export type Profile = {
+  id: string;
+  slug: string;
+  name: string;
+  active: boolean;
+  target_roles: string[];
+  location_mode: LocationMode;
+  location_custom: string | null;
+  salary_floor_nok: number | null;
+  exclusions: string[];
+  seniority_min: "junior" | "mid" | "senior";
+  cv_en: string | null;
+  cv_no: string | null;
+  voice_notes: string | null;
+  sort_order: number;
+  created_at: string;
 };

@@ -126,6 +126,33 @@ export async function POST(req: Request) {
 
   const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! });
 
+  // Cheap Haiku pass: read the JD and extract tonal hints.
+  // Skipped on revise mode (the user is steering, no need for fresh analysis).
+  let toneHint = "";
+  if (effectiveMode !== "revise") {
+    try {
+      const toneSystem = `You analyze the tone of a job description and output a one-sentence summary of how a cover letter should match it.
+
+Look at: word choice (formal/casual), pronoun use (we/our vs the company), presence of humor or in-jokes, mentions of perks/culture vs strict requirements, any explicit "we're informal" or "we're professional" signals.
+
+Output formats:
+- "Casual: <one sentence>. Match with: <one sentence>."
+- "Formal: <one sentence>. Match with: <one sentence>."
+- "Neutral: <one sentence>. Match with: <one sentence>."
+
+Keep total output under 80 words. No preamble.`;
+      const toneR = await client.messages.create({
+        model: "claude-haiku-4-5",
+        max_tokens: 150,
+        system: toneSystem,
+        messages: [{ role: "user", content: (j.jd_text || "").slice(0, 2000) }],
+      });
+      toneHint = toneR.content.map((b) => (b.type === "text" ? b.text : "")).join("\n").trim();
+    } catch {
+      // Tone extraction failure is non-fatal; just skip the hint.
+    }
+  }
+
   const system = lang === "no" ? SYSTEM_NO : SYSTEM_EN;
   const voiceNotes = profile.voice_notes
     ? `\n\n# Voice notes for this profile (${profile.name})\n\n${profile.voice_notes}`
@@ -154,6 +181,9 @@ ${revisionNotes}
 Revise the letter. Apply the notes literally. Keep what works. All voice and anti-fabrication rules still apply.`;
     } else {
       userContent = jobContext;
+      if (toneHint) {
+        userContent += `\n\nJD tone analysis (use this to calibrate register, but never violate the core voice rules above):\n${toneHint}`;
+      }
     }
 
     const r = await client.messages.create({

@@ -1,6 +1,7 @@
 import Link from "next/link";
-import type { Job } from "@/lib/supabase";
+import type { Job, Profile } from "@/lib/supabase";
 import { StudioMark } from "./visual";
+import { ProfileBadge } from "./profile-filter";
 
 const STATUS_LABELS: Record<string, string> = {
   new: "New",
@@ -16,7 +17,7 @@ const STATUS_LABELS: Record<string, string> = {
 
 type Mode = "liked" | "applied" | "closed";
 
-export function JobList({ jobs, mode }: { jobs: Job[]; mode: Mode }) {
+export function JobList({ jobs, mode, profiles = [] }: { jobs: Job[]; mode: Mode; profiles?: Profile[] }) {
   return (
     <div className="col gap-2">
       {jobs.map((j) => (
@@ -37,7 +38,10 @@ export function JobList({ jobs, mode }: { jobs: Job[]; mode: Mode }) {
             <div className="row gap-3 grow" style={{ minWidth: 0 }}>
               <StudioMark company={j.company} size={48} />
               <div style={{ minWidth: 0 }}>
-                <div className="eyebrow" style={{ fontSize: 10 }}>{j.company}</div>
+                <div className="row gap-2" style={{ marginBottom: 2 }}>
+                  <span className="eyebrow" style={{ fontSize: 10 }}>{j.company}</span>
+                  <ProfileBadge profiles={profiles} slug={j.profile_slug} />
+                </div>
                 <div className="h3" style={{ fontSize: 18, marginBottom: 2 }}>{j.title}</div>
                 {j.location && (
                   <div className="mono dim" style={{ fontSize: 11 }}>{j.location}</div>

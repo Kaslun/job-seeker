@@ -1,4 +1,4 @@
-import { SidebarShell } from "@/components/sidebar-shell";
+import { Sidebar } from "@/components/sidebar";
 import { getSupabase, type Job } from "@/lib/supabase";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -17,7 +17,7 @@ export default async function LetterPage({ params }: { params: { id: string } })
 
   return (
     <div style={{ minHeight: "100vh", background: "var(--paper)" }}>
-      <SidebarShell />
+      <Sidebar />
       <div className="main-shifted">
         <div style={{ padding: "24px 40px 80px", maxWidth: 1180, margin: "0 auto" }}>
           <div className="row between" style={{ marginBottom: 18 }}>

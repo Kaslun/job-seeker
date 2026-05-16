@@ -1,4 +1,4 @@
-import { SidebarShell } from "@/components/sidebar-shell";
+import { Sidebar } from "@/components/sidebar";
 import { getSupabase, type Profile } from "@/lib/supabase";
 import { unstable_noStore as noStore } from "next/cache";
 import { notFound } from "next/navigation";
@@ -17,7 +17,7 @@ export default async function ProfileEditPage({ params }: { params: { slug: stri
 
   return (
     <div style={{ minHeight: "100vh", background: "var(--paper)" }}>
-      <SidebarShell />
+      <Sidebar />
       <div className="main-shifted">
         <div style={{ padding: "32px 60px 80px", maxWidth: 1080, margin: "0 auto" }}>
           <div className="row between" style={{ marginBottom: 18 }}>

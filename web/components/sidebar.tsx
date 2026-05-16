@@ -1,10 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { ThemeToggle } from "./theme";
-import type { Profile } from "@/lib/supabase";
 
 type NavItem = { href: string; label: string; group: string };
 
@@ -21,32 +20,9 @@ const GROUP_LABELS: Record<string, string> = {
   setup: "Setup",
 };
 
-export function Sidebar({
-  profiles,
-  activeProfileSlug,
-}: {
-  profiles: Profile[];
-  activeProfileSlug: string | null;
-}) {
+export function Sidebar() {
   const pathname = usePathname();
-  const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [switching, setSwitching] = useState(false);
-
-  const setActiveProfile = async (slug: string) => {
-    if (slug === activeProfileSlug) return;
-    setSwitching(true);
-    try {
-      await fetch("/api/profile/active", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ slug }),
-      });
-      router.refresh();
-    } finally {
-      setSwitching(false);
-    }
-  };
 
   const groups = NAV_ITEMS.reduce<Record<string, NavItem[]>>((acc, item) => {
     (acc[item.group] = acc[item.group] || []).push(item);
@@ -55,7 +31,6 @@ export function Sidebar({
 
   return (
     <>
-      {/* Mobile toggle */}
       <button
         className="sidebar-mobile-toggle"
         onClick={() => setMobileOpen(!mobileOpen)}
@@ -73,28 +48,6 @@ export function Sidebar({
             <span className="logo-mark" />
             <span>questboard</span>
           </Link>
-
-          {profiles.length > 0 && (
-            <div className="profile-switcher">
-              <div className="eyebrow" style={{ fontSize: 10, marginBottom: 6 }}>Active profile</div>
-              <div className="col gap-1">
-                {profiles.map((p) => {
-                  const active = p.slug === activeProfileSlug;
-                  return (
-                    <button
-                      key={p.slug}
-                      className={"profile-pill" + (active ? " active" : "")}
-                      onClick={() => setActiveProfile(p.slug)}
-                      disabled={switching}
-                    >
-                      <span style={{ flex: 1, textAlign: "left" }}>{p.name}</span>
-                      {active && <span className="profile-pill-dot" />}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
 
           <nav className="sidebar-nav">
             {Object.entries(groups).map(([group, items]) => (
@@ -155,37 +108,7 @@ export function Sidebar({
           gap: 24px; height: 100%;
         }
         .sidebar .logo { padding: 0 6px; }
-        .profile-switcher { padding: 0 6px; }
-        .profile-pill {
-          display: flex; align-items: center;
-          width: 100%;
-          padding: 8px 12px;
-          border-radius: 999px;
-          font-family: var(--f-body);
-          font-size: 13px; font-weight: 500;
-          background: transparent;
-          border: 1px solid var(--paper-3);
-          color: var(--ink-2);
-          cursor: pointer;
-          transition: background .12s, border-color .12s, color .12s;
-          text-align: left;
-        }
-        .profile-pill:hover:not(:disabled) {
-          background: var(--card);
-          color: var(--ink);
-        }
-        .profile-pill.active {
-          background: var(--ink);
-          color: var(--paper);
-          border-color: var(--ink);
-        }
-        .profile-pill-dot {
-          width: 6px; height: 6px; border-radius: 50%;
-          background: var(--accent);
-        }
-        .profile-pill:disabled { opacity: 0.6; cursor: not-allowed; }
         .sidebar-nav { flex: 1; display: flex; flex-direction: column; gap: 20px; padding: 0 6px; }
-        .sidebar-group {}
         .sidebar-link {
           display: block;
           padding: 7px 12px;

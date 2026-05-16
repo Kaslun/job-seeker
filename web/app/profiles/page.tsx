@@ -1,4 +1,4 @@
-import { SidebarShell } from "@/components/sidebar-shell";
+import { Sidebar } from "@/components/sidebar";
 import { getAllProfiles } from "@/lib/profile";
 import Link from "next/link";
 import { unstable_noStore as noStore } from "next/cache";
@@ -12,7 +12,7 @@ export default async function ProfilesPage() {
 
   return (
     <div style={{ minHeight: "100vh", background: "var(--paper)" }}>
-      <SidebarShell />
+      <Sidebar />
       <div className="main-shifted">
         <div style={{ padding: "32px 60px 60px", maxWidth: 1080, margin: "0 auto" }}>
           <div className="row between end" style={{ marginBottom: 24 }}>

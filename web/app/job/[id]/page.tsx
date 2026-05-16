@@ -1,4 +1,4 @@
-import { SidebarShell } from "@/components/sidebar-shell";
+import { Sidebar } from "@/components/sidebar";
 import { getSupabase, type Job } from "@/lib/supabase";
 import { CoverArt, Icon, MatchRing } from "@/components/visual";
 import { extractTags, levelFromTitle, relativeTime } from "@/lib/derive";
@@ -22,7 +22,7 @@ export default async function JobPage({ params }: { params: { id: string } }) {
 
   return (
     <div style={{ minHeight: "100vh", background: "var(--paper)" }}>
-      <SidebarShell />
+      <Sidebar />
       <div className="main-shifted">
         <div style={{ padding: "24px 60px 60px", maxWidth: 1080, margin: "0 auto" }}>
           <div className="row between" style={{ marginBottom: 18 }}>

@@ -1,178 +1,144 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import type { Job } from "@/lib/supabase";
-import { CoverArt, Icon, MatchRing } from "@/components/visual";
-import { extractPitch, extractTags, levelFromTitle, relativeTime } from "@/lib/derive";
+import type { Job, Profile } from "@/lib/supabase";
+import { CoverArt, Icon, MatchRing, StudioMark } from "@/components/visual";
+import { ProfileBadge, ProfileFilterChips, useProfileFilter } from "@/components/profile-filter";
 
-type FadingMap = Record<string, "left" | "right" | undefined>;
+type Decision = "interested" | "skip";
 
-export function FeedClient({ initialJobs }: { initialJobs: Job[] }) {
+export function FeedClient({ initialJobs, profiles }: { initialJobs: Job[]; profiles: Profile[] }) {
   const [jobs, setJobs] = useState(initialJobs);
-  const [fading, setFading] = useState<FadingMap>({});
   const [busy, setBusy] = useState(false);
+  const [exiting, setExiting] = useState<string | null>(null);
   const router = useRouter();
 
-  const decide = async (job: Job, decision: "skip" | "interested") => {
-    if (busy || fading[job.id]) return;
-    setBusy(true);
-    setFading((f) => ({ ...f, [job.id]: decision === "skip" ? "left" : "right" }));
+  const { selected, toggle, setAll } = useProfileFilter(profiles);
 
+  const visibleJobs = useMemo(() => {
+    if (!selected) return jobs;
+    return jobs.filter((j) => j.profile_slug && selected.has(j.profile_slug));
+  }, [jobs, selected]);
+
+  const current = visibleJobs[0];
+
+  async function decide(d: Decision) {
+    if (!current || busy) return;
+    setBusy(true);
+    setExiting(current.id);
     try {
-      const res = await fetch(`/api/jobs/${job.id}`, {
+      await fetch(`/api/jobs/${current.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: decision }),
+        body: JSON.stringify({ status: d }),
       });
-      if (!res.ok) throw new Error(await res.text());
-
-      // Wait for animation to finish, then drop from list.
-      await new Promise((r) => setTimeout(r, 350));
-      setJobs((js) => js.filter((j) => j.id !== job.id));
+      await new Promise((r) => setTimeout(r, 280));
+      setJobs((js) => js.filter((j) => j.id !== current.id));
       router.refresh();
-    } catch (e: any) {
-      // Roll back
-      setFading((f) => ({ ...f, [job.id]: undefined }));
-      alert("Failed: " + e.message);
+    } catch (e) {
+      console.error(e);
     } finally {
+      setExiting(null);
       setBusy(false);
     }
-  };
-
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.target instanceof HTMLElement && (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA")) return;
-      const top = jobs.find((j) => !fading[j.id]);
-      if (!top) return;
-      if (e.key === "ArrowRight") decide(top, "interested");
-      if (e.key === "ArrowLeft") decide(top, "skip");
-      if (e.key === "Enter") router.push(`/job/${top.id}`);
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  });
-
-  if (jobs.length === 0) {
-    return (
-      <div className="card p-8 center" style={{ flexDirection: "column", textAlign: "center", gap: 12 }}>
-        <div className="h1" style={{ fontSize: 36 }}>Inbox zero.</div>
-        <p className="muted" style={{ maxWidth: 400 }}>
-          No new jobs to review. The scraper runs daily at 09:00 Oslo — come back tomorrow, or check the Applied tab.
-        </p>
-      </div>
-    );
   }
 
+  function openJob() {
+    if (!current) return;
+    router.push(`/job/${current.id}`);
+  }
+
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.target instanceof HTMLElement && ["INPUT", "TEXTAREA"].includes(e.target.tagName)) return;
+      if (e.key === "ArrowLeft") { e.preventDefault(); decide("skip"); }
+      else if (e.key === "ArrowRight") { e.preventDefault(); decide("interested"); }
+      else if (e.key === "Enter") { e.preventDefault(); openJob(); }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [current, busy]);
+
   return (
-    <div className="col gap-3">
-      {jobs.map((j, idx) => {
-        const ex = fading[j.id];
-        const pitch = extractPitch(j.jd_text);
-        const tags = extractTags(j.jd_text, j.location, j.remote_type);
-        const level = levelFromTitle(j.title);
-        const isTop = idx === 0;
-        const exitVars = ex
-          ? ({
-              "--exit-x": ex === "right" ? "900px" : "-900px",
-              "--exit-r": ex === "right" ? "8deg" : "-8deg",
-            } as React.CSSProperties)
-          : {};
-        return (
-          <div
-            key={j.id}
-            className={"card feed-card p-5" + (ex ? " fading" : "")}
-            style={exitVars}
-            onClick={(e) => {
-              const tag = (e.target as HTMLElement).closest("button");
-              if (!tag) router.push(`/job/${j.id}`);
-            }}
-          >
-            <div className="row gap-4 start">
-              <CoverArt
-                company={j.company}
-                title={j.title}
-                style={{ width: 200, flex: "0 0 200px", fontSize: 22 }}
-              />
+    <>
+      <ProfileFilterChips
+        profiles={profiles}
+        selected={selected}
+        onToggle={toggle}
+        onSetAll={setAll}
+      />
+
+      {visibleJobs.length === 0 ? (
+        <EmptyState totalFetched={jobs.length} />
+      ) : (
+        <article
+          className="card p-0"
+          style={{
+            overflow: "hidden",
+            transition: "transform .28s ease, opacity .28s ease",
+            transform: exiting === current.id ? "translateX(-40px)" : "translateX(0)",
+            opacity: exiting === current.id ? 0 : 1,
+          }}
+        >
+          <CoverArt company={current.company} title={current.title} style={{ aspectRatio: "21/9", fontSize: 64 }} />
+          <div style={{ padding: 28 }}>
+            <div className="row between start" style={{ gap: 16, marginBottom: 14 }}>
               <div className="grow">
-                <div className="row between start" style={{ marginBottom: 8 }}>
-                  <div>
-                    <div className="row gap-2" style={{ marginBottom: 4 }}>
-                      <span className="eyebrow">{j.company}</span>
-                      {isTop && (
-                        <span
-                          className="mono"
-                          style={{
-                            fontSize: 10,
-                            padding: "1px 6px",
-                            background: "var(--ink)",
-                            color: "var(--paper)",
-                            borderRadius: 999,
-                          }}
-                        >
-                          UP NEXT
-                        </span>
-                      )}
-                      <span className="chip chip-outline" style={{ fontSize: 11 }}>
-                        {level}
-                      </span>
-                    </div>
-                    <h2 className="h2" style={{ fontSize: 24 }}>{j.title}</h2>
-                  </div>
-                  {j.fit_score != null && <MatchRing score={j.fit_score} />}
+                <div className="row gap-3" style={{ marginBottom: 6, alignItems: "center" }}>
+                  <StudioMark company={current.company} size={28} />
+                  <span className="eyebrow">{current.company}</span>
+                  <ProfileBadge profiles={profiles} slug={current.profile_slug} />
                 </div>
-                <div className="row wrap gap-3" style={{ fontSize: 13, color: "var(--ink-2)", marginBottom: 10 }}>
-                  {j.location && (
-                    <span className="row gap-2"><Icon.pin /> {j.location}</span>
-                  )}
-                  {j.salary_text && (
-                    <span className="row gap-2"><Icon.cash /> {j.salary_text}</span>
-                  )}
-                  <span className="row gap-2"><Icon.cal /> {relativeTime(j.discovered_at)}</span>
-                </div>
-                {pitch && (
-                  <p className="body" style={{ margin: "0 0 12px", color: "var(--ink-2)", fontSize: 14 }}>
-                    {pitch}
-                  </p>
-                )}
-                <div className="row between">
-                  <div className="row wrap gap-2">
-                    {tags.map((t, i) => (
-                      <span key={i} className={"chip" + (i === 0 ? " chip-accent" : "")}>
-                        {t}
-                      </span>
-                    ))}
-                  </div>
-                  <div className="row gap-2">
-                    <button
-                      className="btn btn-icon"
-                      title="Skip (←)"
-                      disabled={!!ex || busy}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        decide(j, "skip");
-                      }}
-                    >
-                      <Icon.x />
-                    </button>
-                    <button
-                      className="btn btn-icon btn-primary"
-                      title="Interested (→)"
-                      disabled={!!ex || busy}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        decide(j, "interested");
-                      }}
-                    >
-                      <Icon.heart />
-                    </button>
-                  </div>
+                <h2 className="h2" style={{ fontSize: 30 }}>{current.title}</h2>
+                <div className="row wrap gap-4" style={{ marginTop: 10, fontSize: 13, color: "var(--ink-2)" }}>
+                  {current.location && <span className="row gap-2"><Icon.pin /> {current.location}</span>}
+                  {current.remote_type && <span className="row gap-2">{current.remote_type}</span>}
+                  {current.lang === "no" && <span className="row gap-2">Norsk JD</span>}
                 </div>
               </div>
+              {current.fit_score != null && <MatchRing score={current.fit_score} size={56} />}
+            </div>
+
+            {current.fit_rationale && (
+              <p className="body" style={{ fontSize: 14, color: "var(--ink-2)", margin: "8px 0 18px" }}>
+                {current.fit_rationale}
+              </p>
+            )}
+
+            <div className="row gap-2 wrap">
+              <button className="btn btn-flat btn-danger" onClick={() => decide("skip")} disabled={busy}>
+                <Icon.x /> Pass
+              </button>
+              <button className="btn btn-flat" onClick={openJob} disabled={busy}>
+                Open <Icon.arrow />
+              </button>
+              <button className="btn btn-primary" onClick={() => decide("interested")} disabled={busy}>
+                <Icon.heart /> Save
+              </button>
+              <span className="muted" style={{ marginLeft: "auto", alignSelf: "center", fontSize: 12 }}>
+                {visibleJobs.length - 1} more queued
+              </span>
             </div>
           </div>
-        );
-      })}
+        </article>
+      )}
+    </>
+  );
+}
+
+function EmptyState({ totalFetched }: { totalFetched: number }) {
+  return (
+    <div className="card p-8 center" style={{ flexDirection: "column", textAlign: "center", gap: 14 }}>
+      <div className="h2" style={{ fontSize: 26 }}>
+        {totalFetched === 0 ? "No new roles to triage." : "Nothing matching this filter."}
+      </div>
+      <p className="muted" style={{ maxWidth: 440 }}>
+        {totalFetched === 0
+          ? "The scraper runs daily. Come back tomorrow, or trigger a manual run from GitHub Actions."
+          : "Try toggling another profile chip, or hit All."}
+      </p>
     </div>
   );
 }

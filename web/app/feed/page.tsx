@@ -1,6 +1,6 @@
-import { SidebarShell } from "@/components/sidebar-shell";
+import { Sidebar } from "@/components/sidebar";
 import { getSupabase, type Job } from "@/lib/supabase";
-import { getActiveProfile } from "@/lib/profile";
+import { getAllProfiles } from "@/lib/profile";
 import { FeedClient } from "./feed-client";
 import { unstable_noStore as noStore } from "next/cache";
 
@@ -10,33 +10,26 @@ export const revalidate = 0;
 export default async function FeedPage() {
   noStore();
   const sb = getSupabase();
-  const active = await getActiveProfile();
-
-  let query = sb
-    .from("jobs")
-    .select("*")
-    .eq("status", "new")
-    .order("fit_score", { ascending: false, nullsFirst: false })
-    .order("discovered_at", { ascending: false })
-    .limit(50);
-
-  if (active) {
-    query = query.eq("profile_slug", active.slug);
-  }
-
-  const { data, error } = await query;
-  const jobs = (data as Job[]) || [];
+  const [profiles, jobsResp] = await Promise.all([
+    getAllProfiles(),
+    sb
+      .from("jobs")
+      .select("*")
+      .eq("status", "new")
+      .order("fit_score", { ascending: false, nullsFirst: false })
+      .order("discovered_at", { ascending: false })
+      .limit(100),
+  ]);
+  const jobs = (jobsResp.data as Job[]) || [];
 
   return (
     <div style={{ minHeight: "100vh", background: "var(--paper)" }}>
-      <SidebarShell />
+      <Sidebar />
       <div className="main-shifted">
         <div style={{ padding: "32px 60px 60px", maxWidth: 920, margin: "0 auto" }}>
-          <div className="row between" style={{ alignItems: "flex-end", marginBottom: 24 }}>
+          <div className="row between" style={{ alignItems: "flex-end", marginBottom: 18 }}>
             <div>
-              <div className="eyebrow" style={{ marginBottom: 6 }}>
-                {todayLabel()}{active && ` · ${active.name}`}
-              </div>
+              <div className="eyebrow" style={{ marginBottom: 6 }}>{todayLabel()}</div>
               <h1 className="h1">
                 Today&apos;s <span className="draw-u">roles</span>.
               </h1>
@@ -46,13 +39,13 @@ export default async function FeedPage() {
             </span>
           </div>
 
-          {error && (
+          {jobsResp.error && (
             <div className="card p-5" style={{ borderColor: "var(--rose-2)", color: "var(--rose-2)" }}>
-              Error loading jobs: {error.message}
+              Error loading jobs: {jobsResp.error.message}
             </div>
           )}
 
-          <FeedClient initialJobs={jobs} />
+          <FeedClient initialJobs={jobs} profiles={profiles} />
         </div>
       </div>
     </div>

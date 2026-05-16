@@ -177,7 +177,16 @@ export function LetterClient({ job }: { job: Job }) {
           (not a textarea, which doesn't reliably print). */}
       <div className="letter-print-only">{letter}</div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "210mm 1fr", gap: 28, alignItems: "flex-start" }}>
+      <div className="letter-mobile-block" style={{ display: "none" }}>
+        <div className="card p-6" style={{ textAlign: "center" }}>
+          <div className="h3" style={{ fontSize: 18, marginBottom: 8 }}>Letter editor is desktop-only</div>
+          <p className="muted" style={{ fontSize: 13, margin: 0 }}>
+            Letter drafting needs the A4 preview, which doesn't fit on a phone. Open this on your computer to write and send.
+          </p>
+        </div>
+      </div>
+
+      <div className="letter-desktop-only" style={{ display: "grid", gridTemplateColumns: "210mm 1fr", gap: 28, alignItems: "flex-start" }}>
         <div className="letter-page">
           {isGen ? (
             <div className="col gap-3">

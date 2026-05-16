@@ -33,6 +33,10 @@ export type Job = {
   letter_text: string | null;
   discovered_at: string;
   applied_at: string | null;
+  notes: string | null;
+  deadline: string | null;
+  recruiter_contact: string | null;
+  salary_discussed: string | null;
   profile_slug: string | null;
   lang: "en" | "no" | null;
 };

@@ -328,3 +328,34 @@ textarea:focus, input:focus { outline: none; border-color: var(--ink-2); }
 
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { scrollbar-width: none; }
+
+/* Mobile responsive */
+@media (max-width: 840px) {
+  .kbd-hint { display: none; }
+  .h1 { font-size: 32px !important; }
+  .h2 { font-size: 22px !important; }
+}
+@media (max-width: 640px) {
+  .main-shifted > div { padding-left: 18px !important; padding-right: 18px !important; }
+  .h1 { font-size: 28px !important; }
+  /* Feed card action row: stretch buttons across the width, easy thumb targets */
+  .feed-actions {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+  }
+  .feed-actions > button, .feed-actions > a {
+    width: 100%;
+    justify-content: center;
+    padding-top: 14px;
+    padding-bottom: 14px;
+    font-size: 14px;
+  }
+  .feed-actions > .feed-actions-spacer { display: none; }
+}
+
+/* Block letter editing on mobile — A4 textarea is unusable */
+@media (max-width: 840px) {
+  .letter-mobile-block { display: block !important; }
+  .letter-desktop-only { display: none !important; }
+}

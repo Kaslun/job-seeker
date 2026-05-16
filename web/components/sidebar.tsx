@@ -8,8 +8,10 @@ import { ThemeToggle } from "./theme";
 type NavItem = { href: string; label: string; group: string };
 
 const NAV_ITEMS: NavItem[] = [
+  { href: "/", label: "Today", group: "discover" },
   { href: "/feed", label: "Feed", group: "discover" },
   { href: "/liked", label: "Liked", group: "discover" },
+  { href: "/skipped", label: "Skipped", group: "discover" },
   { href: "/applied", label: "Applied", group: "track" },
   { href: "/profiles", label: "Profiles", group: "setup" },
 ];

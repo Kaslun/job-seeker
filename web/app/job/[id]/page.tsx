@@ -6,6 +6,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { unstable_noStore as noStore } from "next/cache";
 import { JobActions } from "./job-actions";
+import { NotesPanel } from "./notes-panel";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -81,6 +82,7 @@ export default async function JobPage({ params }: { params: { id: string } }) {
 
             <aside className="col" style={{ gap: 16, position: "sticky", top: 24, alignSelf: "flex-start" }}>
               <JobActions job={job} />
+              <NotesPanel job={job} />
             </aside>
           </div>
         </div>

@@ -12,6 +12,8 @@ export function FeedClient({ initialJobs, profiles }: { initialJobs: Job[]; prof
   const [jobs, setJobs] = useState(initialJobs);
   const [busy, setBusy] = useState(false);
   const [exiting, setExiting] = useState<string | null>(null);
+  const [touchStartX, setTouchStartX] = useState<number | null>(null);
+  const [touchDeltaX, setTouchDeltaX] = useState(0);
   const router = useRouter();
 
   const { selected, toggle, setAll } = useProfileFilter(profiles);
@@ -75,11 +77,26 @@ export function FeedClient({ initialJobs, profiles }: { initialJobs: Job[]; prof
       ) : (
         <article
           className="card p-0"
+          onTouchStart={(e) => setTouchStartX(e.touches[0].clientX)}
+          onTouchMove={(e) => {
+            if (touchStartX !== null) setTouchDeltaX(e.touches[0].clientX - touchStartX);
+          }}
+          onTouchEnd={() => {
+            const dx = touchDeltaX;
+            setTouchStartX(null);
+            setTouchDeltaX(0);
+            if (Math.abs(dx) > 80 && !busy) {
+              decide(dx > 0 ? "interested" : "skip");
+            }
+          }}
           style={{
             overflow: "hidden",
-            transition: "transform .28s ease, opacity .28s ease",
-            transform: exiting === current.id ? "translateX(-40px)" : "translateX(0)",
-            opacity: exiting === current.id ? 0 : 1,
+            transition: touchStartX === null ? "transform .28s ease, opacity .28s ease" : "none",
+            transform: exiting === current.id
+              ? `translateX(${exiting === current.id ? (touchDeltaX < 0 ? -400 : touchDeltaX > 0 ? 400 : -40) : 0}px)`
+              : `translateX(${touchDeltaX}px)`,
+            opacity: exiting === current.id ? 0 : Math.max(0.4, 1 - Math.abs(touchDeltaX) / 400),
+            touchAction: "pan-y",
           }}
         >
           <CoverArt company={current.company} title={current.title} style={{ aspectRatio: "21/9", fontSize: 64 }} />
@@ -107,7 +124,7 @@ export function FeedClient({ initialJobs, profiles }: { initialJobs: Job[]; prof
               </p>
             )}
 
-            <div className="row gap-2 wrap">
+            <div className="row gap-2 wrap feed-actions">
               <button className="btn btn-flat btn-danger" onClick={() => decide("skip")} disabled={busy}>
                 <Icon.x /> Pass
               </button>
@@ -117,7 +134,7 @@ export function FeedClient({ initialJobs, profiles }: { initialJobs: Job[]; prof
               <button className="btn btn-primary" onClick={() => decide("interested")} disabled={busy}>
                 <Icon.heart /> Save
               </button>
-              <span className="muted" style={{ marginLeft: "auto", alignSelf: "center", fontSize: 12 }}>
+              <span className="muted feed-actions-spacer" style={{ marginLeft: "auto", alignSelf: "center", fontSize: 12 }}>
                 {visibleJobs.length - 1} more queued
               </span>
             </div>
